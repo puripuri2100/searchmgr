@@ -34,7 +34,7 @@ function App() {
   }
 
   async function new_button_click() {
-    const d = {title: "タイトル", book_name: null, url: null, time_stamp: null, memo: "", keywords: []};
+    const d = {title: "", book_name: null, url: null, time_stamp: null, memo: "", keywords: []};
     if (data) {
       setData([d,...data])
     } else {
@@ -80,6 +80,16 @@ function App() {
     }
   }
 
+  async function deleteData(index: number) {
+    if (data) {
+      setData(data.filter((_, i) => i != index))
+    }
+  }
+
+  function Line(_props: {}) {
+    return <div className="line"></div>
+  }
+
   useEffect(() => {
     (async() => {
       if (dataPath && data) {
@@ -95,13 +105,17 @@ function App() {
       {data ?
         <>
           <NewButton/>
-          {data.map((d: data, index) =>
-            <div className="data">
-              <input value={d.title} onChange={(e) => {changeTitle(index, e.target.value)}}/>
-              <input value={d.url ? d.url : ""} onChange={(e) => {changeUrl(index, e.target.value)}}/>
-              <input value={d.book_name ? d.book_name : ""} onChange={(e) => {changeBookName(index, e.target.value)}}/>
-              <textarea value={d.memo} onChange={(e) => {changeMemo(index, e.target.value)}}/>
-            </div>
+          {data.map((d: data, index: number) =>
+            <>
+              <div className="data">
+                <input value={d.title} onChange={(e) => {changeTitle(index, e.target.value)}}/>
+                <input value={d.url ? d.url : ""} onChange={(e) => {changeUrl(index, e.target.value)}}/>
+                <input value={d.book_name ? d.book_name : ""} onChange={(e) => {changeBookName(index, e.target.value)}}/>
+                <textarea value={d.memo} onChange={(e) => {changeMemo(index, e.target.value)}}/>
+                <button type="submit" onClick={() => deleteData(index)}>削除</button>
+              </div>
+              {index == 0 ? <></> : <Line/>}
+            </>
           )}
         </>
       :

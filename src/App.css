@@ -20,6 +20,12 @@
   padding: 1em;
 }
 
+
+.line {
+  border-top-color: 'black';
+  border-top-width: 1pt;
+}
+
 .logo.vite:hover {
   filter: drop-shadow(0 0 2em #747bff);
 }
