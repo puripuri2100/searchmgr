@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/tauri";
 import { save, open } from "@tauri-apps/api/dialog";
 import { writeTextFile, readTextFile } from "@tauri-apps/api/fs";
@@ -51,6 +50,36 @@ function App() {
     )
   }
 
+  async function changeTitle(index: number, v: string) {
+    if (data) {
+      setData(data.map((d, i) => i == index ? {...d, title: v} : d))
+    }
+  }
+
+  async function changeUrl(index: number, v: string) {
+    if (data) {
+      setData(data.map((d, i) => i == index ? {...d, url: v} : d))
+    }
+  }
+
+  async function changeBookName(index: number, v: string) {
+    if (data) {
+      setData(data.map((d, i) => i == index ? {...d, book_name: v} : d))
+    }
+  }
+
+  async function changeKeyWords(index: number, v: string[]) {
+    if (data) {
+      setData(data.map((d, i) => i == index ? {...d, keywords: v} : d))
+    }
+  }
+
+  async function changeMemo(index: number, v: string) {
+    if (data) {
+      setData(data.map((d, i) => i == index ? {...d, memo: v} : d))
+    }
+  }
+
   useEffect(() => {
     (async() => {
       if (dataPath && data) {
@@ -66,7 +95,14 @@ function App() {
       {data ?
         <>
           <NewButton/>
-          {data.map((d: data, index) => <p>{index}: {d.title}</p>)}
+          {data.map((d: data, index) =>
+            <div className="data">
+              <input value={d.title} onChange={(e) => {changeTitle(index, e.target.value)}}/>
+              <input value={d.url ? d.url : ""} onChange={(e) => {changeUrl(index, e.target.value)}}/>
+              <input value={d.book_name ? d.book_name : ""} onChange={(e) => {changeBookName(index, e.target.value)}}/>
+              <textarea value={d.memo} onChange={(e) => {changeMemo(index, e.target.value)}}/>
+            </div>
+          )}
         </>
       :
         <div className="container">
