@@ -1,55 +1,82 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/tauri";
-import useListen from "./hooks/useListen";
+import { save, open } from "@tauri-apps/api/dialog";
+import { writeTextFile, readTextFile } from "@tauri-apps/api/fs";
+import { data } from "./data";
 import "./App.css";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name }));
+
+function App() {
+
+  const [data, setData] = useState<data[] | null>(null);
+  const [dataPath, setDataPath] = useState<string | null>(null);
+
+  async function new_create_button() {
+    const path = await save({filters: [{name: "searchmgr file", extensions: ["smgr"]}]});
+    if (path) {
+      setDataPath(path);
+      setData([]);
+    }
   }
 
-  useListen();
+  async function import_button() {
+    const path = await open({
+      multiple: false,
+      filters: [{name: "searchmgr file", extensions: ["smgr"]}]
+    });
+    if (path && !Array.isArray(path)) {
+      setDataPath(path);
+      const text = await readTextFile(path);
+      const data_lst: data[] = JSON.parse(text);
+      setData(data_lst);
+    }
+  }
+
+  async function new_button_click() {
+    const d = {title: "タイトル", book_name: null, url: null, time_stamp: null, memo: "", keywords: []};
+    if (data) {
+      setData([d,...data])
+    } else {
+      setData([d])
+    }
+  }
+
+  function NewButton() {
+    return (
+      <>
+        <button className="newbutton" onClick={new_button_click}>+ New</button>
+      </>
+    )
+  }
+
+  useEffect(() => {
+    (async() => {
+      if (dataPath && data) {
+        const text = JSON.stringify(data);
+        await writeTextFile(dataPath, text);
+      }
+    })()
+  }, [data])
+
 
   return (
-    <div className="container">
-      <h1>Welcome to Tauri!</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-
-      <p>{greetMsg}</p>
-    </div>
+    <>
+      {data ?
+        <>
+          <NewButton/>
+          {data.map((d: data, index) => <p>{index}: {d.title}</p>)}
+        </>
+      :
+        <div className="container">
+          <div className="rowbuttons">
+            <button className="rowbutton" type="submit" onClick={new_create_button}>New Create</button>
+            <button className="rowbutton" type="submit" onClick={import_button}>Import</button>
+          </div>
+        </div>
+      }
+    </>
   );
 }
 

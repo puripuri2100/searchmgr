@@ -10,27 +10,27 @@ fn greet(name: &str) -> String {
 }
 
 fn main() {
-    let export = CustomMenuItem::new("export".to_string(), "Export");
+    let new_project = CustomMenuItem::new("new_project".to_string(), "New Project");
     let import = CustomMenuItem::new("import".to_string(), "Import");
-    let save= CustomMenuItem::new("save".to_string(), "Save");
-    let filemenu = Submenu::new("File", Menu::new().add_item(export).add_item(import).add_item(save));
+    let export_bibtex = CustomMenuItem::new("export_bibtex".to_string(), "Export Bibtex");
+    let filemenu = Submenu::new("File", Menu::new().add_item(new_project).add_item(import).add_item(export_bibtex));
 
     let menu = Menu::new().add_submenu(filemenu);
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![greet])
         .menu(menu)
         .on_menu_event(|event| match event.menu_item_id() {
-            "export" => {
+            "new_project" => {
                 let window = event.window();
-                window.emit("export", "export".to_string()).unwrap();
+                window.emit("new_project", "new_project".to_string()).unwrap();
             }
             "import" => {
                 let window = event.window();
                 window.emit("import", "import".to_string()).unwrap();
             }
-            "save" => {
+            "export_bibtex" => {
                 let window = event.window();
-                window.emit("save", "save".to_string()).unwrap();
+                window.emit("export_bibtex", "export_bibtex".to_string()).unwrap();
             }
             _ => {}
         })

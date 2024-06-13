@@ -1,3 +1,21 @@
+.rowbuttons {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+}
+
+.rowbutton {
+  text-align: center;
+  justify-content: center;
+  padding: 1em;
+  margin: 1.5em;
+}
+
+.newbuttton {
+  text-align: center;
+  justify-content: center;
+}
+
 .logo.vite:hover {
   filter: drop-shadow(0 0 2em #747bff);
 }
