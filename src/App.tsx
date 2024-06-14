@@ -144,7 +144,12 @@ function App() {
                         <InputArea><input value={d.title} onChange={(e) => {changeTitle(index, e.target.value)}}/></InputArea>
                         <InputArea title="URL"><input value={d.url ? d.url : ""} onChange={(e) => {changeUrl(index, e.target.value)}}/></InputArea>
                         <InputArea title="本"><input value={d.book_name ? d.book_name : ""} onChange={(e) => {changeBookName(index, e.target.value)}}/></InputArea>
-                        <InputArea title="メモ"><textarea value={d.memo} onChange={(e) => {changeMemo(index, e.target.value)}}/></InputArea>
+                        <InputArea title="メモ">
+                          <>
+                            <div className="textarea_dummy"></div>
+                            <textarea value={d.memo} onChange={(e) => {changeMemo(index, e.target.value)}}/>
+                          </>
+                        </InputArea>
                         <button type="submit" onClick={() => deleteData(index)}>削除</button>
                       </>
                       :
@@ -153,7 +158,7 @@ function App() {
                         <p>{d.title}</p>
                         {d.url ? <a href={d.url} target="_blank">{d.url}</a> : <></>}
                         {d.book_name ? <p>{d.book_name}</p> : <></>}
-                        <p>{d.memo}</p>
+                        {d.memo.split('\n').map((s) => <p>{s}</p>)}
                       </>
                     }
                   </div>
