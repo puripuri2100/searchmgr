@@ -1,4 +1,5 @@
 import { ReactElement, useEffect, useState } from "react";
+import Modal from "react-modal";
 import { invoke } from "@tauri-apps/api/tauri";
 import { save, open } from "@tauri-apps/api/dialog";
 import { writeTextFile, readTextFile } from "@tauri-apps/api/fs";
@@ -21,9 +22,34 @@ function InputArea(props: InputAreaProps) {
 
 function App() {
 
+  const default_data: data = {title: "", book_name: "", url: "", time_stamp: "", memo: "", keywords: []};
   const [data, setData] = useState<data[] | null>(null);
   const [dataPath, setDataPath] = useState<string | null>(null);
   const [isEditList, setIsEditList] = useState<boolean[]>([]);
+  const [createModal, setCreateModal] = useState(false);
+  const [newData, setNewData] = useState<data>(default_data);
+  const [editModal, setEditModal] = useState(false);
+  const [editIndex, setEditIndex] = useState(0);
+
+  function open_create_modal() {
+    setCreateModal(true);
+  }
+  function close_create_modal() {
+    setNewData(default_data);
+    setCreateModal(false);
+  }
+
+  function open_edit_modal(index: number) {
+    if (data) {
+      setNewData(data[index]);
+      setEditIndex(index);
+      setEditModal(true);
+    }
+  }
+  function close_edit_modal() {
+    setNewData(default_data);
+    setEditModal(false);
+  }
 
   async function new_create_button() {
     const path = await save({filters: [{name: "searchmgr file", extensions: ["smgr"]}]});
@@ -48,59 +74,12 @@ function App() {
     }
   }
 
-  async function new_button_click() {
-    const d = {title: "タイトル", book_name: null, url: null, time_stamp: null, memo: "", keywords: []};
-    if (data) {
-      setData([d,...data]);
-      setIsEditList([true,...isEditList]);
-    } else {
-      setData([d]);
-      setIsEditList([true]);
-    }
-  }
-
   function NewButton() {
     return (
       <>
-        <button className="newbutton" onClick={new_button_click}>+ New</button>
+        <button className="newbutton" onClick={open_create_modal}>+ New</button>
       </>
     )
-  }
-
-  async function changeIsEdit(index: number) {
-    if (data) {
-      setIsEditList(isEditList.map((b, i) => i == index ? !b : b))
-    }
-  }
-
-  async function changeTitle(index: number, v: string) {
-    if (data) {
-      setData(data.map((d, i) => i == index ? {...d, title: v} : d))
-    }
-  }
-
-  async function changeUrl(index: number, v: string) {
-    if (data) {
-      setData(data.map((d, i) => i == index ? {...d, url: v} : d))
-    }
-  }
-
-  async function changeBookName(index: number, v: string) {
-    if (data) {
-      setData(data.map((d, i) => i == index ? {...d, book_name: v} : d))
-    }
-  }
-
-  async function changeKeyWords(index: number, v: string[]) {
-    if (data) {
-      setData(data.map((d, i) => i == index ? {...d, keywords: v} : d))
-    }
-  }
-
-  async function changeMemo(index: number, v: string) {
-    if (data) {
-      setData(data.map((d, i) => i == index ? {...d, memo: v} : d))
-    }
   }
 
   async function deleteData(index: number) {
@@ -128,6 +107,51 @@ function App() {
     <>
       {data ?
         <>
+          <Modal isOpen={createModal}>
+            <InputArea title="タイトル"><input value={newData.title} onChange={(e) => {setNewData({...newData, title: e.target.value})}}/></InputArea>
+            <InputArea title="URL"><input value={newData.url} onChange={(e) => {setNewData({...newData, url: e.target.value})}}/></InputArea>
+            <InputArea title="本"><input value={newData.book_name} onChange={(e) => {setNewData({...newData, book_name: e.target.value})}}/></InputArea>
+            <InputArea title="メモ">
+              <>
+                <div className="textarea_dummy"></div>
+                <textarea value={newData.memo} onChange={(e) => {setNewData({...newData, memo: e.target.value})}}/>
+              </>
+            </InputArea>
+            <button onClick={close_create_modal}>キャンセル</button>
+            <button disabled={newData.title.length == 0} onClick={() => {
+              if (data) {
+                setData([newData,...data]);
+                setIsEditList([false,...isEditList]);
+              } else {
+                setData([newData]);
+                setIsEditList([false]);
+              }
+              close_create_modal();
+            }}>
+              作成
+            </button>
+          </Modal>
+
+          <Modal isOpen={editModal}>
+            <InputArea title="タイトル"><input value={newData.title} onChange={(e) => {setNewData({...newData, title: e.target.value})}}/></InputArea>
+            <InputArea title="URL"><input value={newData.url} onChange={(e) => {setNewData({...newData, url: e.target.value})}}/></InputArea>
+            <InputArea title="本"><input value={newData.book_name} onChange={(e) => {setNewData({...newData, book_name: e.target.value})}}/></InputArea>
+            <InputArea title="メモ">
+              <>
+                <div className="textarea_dummy"></div>
+                <textarea value={newData.memo} onChange={(e) => {setNewData({...newData, memo: e.target.value})}}/>
+              </>
+            </InputArea>
+            <button type="submit" onClick={() => deleteData(editIndex)}>削除</button>
+            <button onClick={close_edit_modal}>キャンセル</button>
+            <button disabled={newData.title.length == 0} onClick={() => {
+              setData(data.map((d, i) => i == editIndex ? newData : d));
+              close_edit_modal();
+            }}>
+              更新
+            </button>
+          </Modal>
+
           <div className="contents">
             <div className="side">
               {data.map((d: data, index:number) => <div><a href={`#data${index}`}>{d.title}</a></div>)}
@@ -138,28 +162,16 @@ function App() {
                 <>
                 {index == 0 ? <></> : <Line/>}
                   <div className="data" id={`data${index}`}>
-                    {isEditList[index] ?
+                    {!isEditList[index] ?
                       <>
-                        <button className="editbutton" onClick={() => changeIsEdit(index)}>確定</button>
-                        <InputArea><input value={d.title} onChange={(e) => {changeTitle(index, e.target.value)}}/></InputArea>
-                        <InputArea title="URL"><input value={d.url ? d.url : ""} onChange={(e) => {changeUrl(index, e.target.value)}}/></InputArea>
-                        <InputArea title="本"><input value={d.book_name ? d.book_name : ""} onChange={(e) => {changeBookName(index, e.target.value)}}/></InputArea>
-                        <InputArea title="メモ">
-                          <>
-                            <div className="textarea_dummy"></div>
-                            <textarea value={d.memo} onChange={(e) => {changeMemo(index, e.target.value)}}/>
-                          </>
-                        </InputArea>
-                        <button type="submit" onClick={() => deleteData(index)}>削除</button>
-                      </>
-                      :
-                      <>
-                        <button className="editbutton" onClick={() => changeIsEdit(index)}>編集</button>
                         <p>{d.title}</p>
                         {d.url ? <a href={d.url} target="_blank">{d.url}</a> : <></>}
                         {d.book_name ? <p>{d.book_name}</p> : <></>}
                         {d.memo.split('\n').map((s) => <p>{s}</p>)}
+                        <button className="editbutton" onClick={() => open_edit_modal(index)}>編集</button>
                       </>
+                      :
+                      <></>
                     }
                   </div>
                 </>

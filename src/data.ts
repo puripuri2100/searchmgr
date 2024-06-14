@@ -4,10 +4,10 @@ export type config = {
 
 export type data = {
   title: string;
-  book_name: string | null;
-  url: string | null;
+  book_name: string;
+  url: string;
   keywords: string[];
-  time_stamp: string | null;
+  time_stamp: string;
   memo: string;
 }
 
