@@ -23,12 +23,14 @@ function App() {
 
   const [data, setData] = useState<data[] | null>(null);
   const [dataPath, setDataPath] = useState<string | null>(null);
+  const [isEditList, setIsEditList] = useState<boolean[]>([]);
 
   async function new_create_button() {
     const path = await save({filters: [{name: "searchmgr file", extensions: ["smgr"]}]});
     if (path) {
       setDataPath(path);
       setData([]);
+      setIsEditList([]);
     }
   }
 
@@ -42,15 +44,18 @@ function App() {
       const text = await readTextFile(path);
       const data_lst: data[] = JSON.parse(text);
       setData(data_lst);
+      setIsEditList(Array(data_lst.length).fill(false));
     }
   }
 
   async function new_button_click() {
     const d = {title: "タイトル", book_name: null, url: null, time_stamp: null, memo: "", keywords: []};
     if (data) {
-      setData([d,...data])
+      setData([d,...data]);
+      setIsEditList([true,...isEditList]);
     } else {
-      setData([d])
+      setData([d]);
+      setIsEditList([true]);
     }
   }
 
@@ -60,6 +65,12 @@ function App() {
         <button className="newbutton" onClick={new_button_click}>+ New</button>
       </>
     )
+  }
+
+  async function changeIsEdit(index: number) {
+    if (data) {
+      setIsEditList(isEditList.map((b, i) => i == index ? !b : b))
+    }
   }
 
   async function changeTitle(index: number, v: string) {
@@ -95,6 +106,7 @@ function App() {
   async function deleteData(index: number) {
     if (data) {
       setData(data.filter((_, i) => i != index))
+      setIsEditList(isEditList.filter((_, i) => i != index))
     }
   }
 
@@ -126,11 +138,24 @@ function App() {
                 <>
                 {index == 0 ? <></> : <Line/>}
                   <div className="data" id={`data${index}`}>
-                    <InputArea><input value={d.title} onChange={(e) => {changeTitle(index, e.target.value)}}/></InputArea>
-                    <InputArea title="URL"><input value={d.url ? d.url : ""} onChange={(e) => {changeUrl(index, e.target.value)}}/></InputArea>
-                    <InputArea title="本"><input value={d.book_name ? d.book_name : ""} onChange={(e) => {changeBookName(index, e.target.value)}}/></InputArea>
-                    <InputArea title="メモ"><textarea value={d.memo} onChange={(e) => {changeMemo(index, e.target.value)}}/></InputArea>
-                    <button type="submit" onClick={() => deleteData(index)}>削除</button>
+                    {isEditList[index] ?
+                      <>
+                        <button className="editbutton" onClick={() => changeIsEdit(index)}>確定</button>
+                        <InputArea><input value={d.title} onChange={(e) => {changeTitle(index, e.target.value)}}/></InputArea>
+                        <InputArea title="URL"><input value={d.url ? d.url : ""} onChange={(e) => {changeUrl(index, e.target.value)}}/></InputArea>
+                        <InputArea title="本"><input value={d.book_name ? d.book_name : ""} onChange={(e) => {changeBookName(index, e.target.value)}}/></InputArea>
+                        <InputArea title="メモ"><textarea value={d.memo} onChange={(e) => {changeMemo(index, e.target.value)}}/></InputArea>
+                        <button type="submit" onClick={() => deleteData(index)}>削除</button>
+                      </>
+                      :
+                      <>
+                        <button className="editbutton" onClick={() => changeIsEdit(index)}>編集</button>
+                        <p>{d.title}</p>
+                        {d.url ? <a href={d.url} target="_blank">{d.url}</a> : <></>}
+                        {d.book_name ? <p>{d.book_name}</p> : <></>}
+                        <p>{d.memo}</p>
+                      </>
+                    }
                   </div>
                 </>
               )}

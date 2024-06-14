@@ -14,6 +14,13 @@
 .newbuttton {
   text-align: center;
   justify-content: center;
+  padding: 1em;
+}
+
+.editbutton {
+  text-align: center;
+  justify-content: center;
+  margin-bottom: 1em;
 }
 
 .data {
