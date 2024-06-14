@@ -25,7 +25,6 @@ function App() {
   const default_data: data = {title: "", book_name: "", url: "", time_stamp: "", memo: "", keywords: []};
   const [data, setData] = useState<data[] | null>(null);
   const [dataPath, setDataPath] = useState<string | null>(null);
-  const [isEditList, setIsEditList] = useState<boolean[]>([]);
   const [createModal, setCreateModal] = useState(false);
   const [newData, setNewData] = useState<data>(default_data);
   const [editModal, setEditModal] = useState(false);
@@ -56,7 +55,6 @@ function App() {
     if (path) {
       setDataPath(path);
       setData([]);
-      setIsEditList([]);
     }
   }
 
@@ -70,7 +68,6 @@ function App() {
       const text = await readTextFile(path);
       const data_lst: data[] = JSON.parse(text);
       setData(data_lst);
-      setIsEditList(Array(data_lst.length).fill(false));
     }
   }
 
@@ -84,8 +81,9 @@ function App() {
 
   async function deleteData(index: number) {
     if (data) {
-      setData(data.filter((_, i) => i != index))
-      setIsEditList(isEditList.filter((_, i) => i != index))
+      setData(data.filter((_, i) => i != index));
+      setNewData(default_data);
+      setEditModal(false);
     }
   }
 
@@ -121,10 +119,8 @@ function App() {
             <button disabled={newData.title.length == 0} onClick={() => {
               if (data) {
                 setData([newData,...data]);
-                setIsEditList([false,...isEditList]);
               } else {
                 setData([newData]);
-                setIsEditList([false]);
               }
               close_create_modal();
             }}>
@@ -162,17 +158,13 @@ function App() {
                 <>
                 {index == 0 ? <></> : <Line/>}
                   <div className="data" id={`data${index}`}>
-                    {!isEditList[index] ?
-                      <>
-                        <p>{d.title}</p>
-                        {d.url ? <a href={d.url} target="_blank">{d.url}</a> : <></>}
-                        {d.book_name ? <p>{d.book_name}</p> : <></>}
-                        {d.memo.split('\n').map((s) => <p>{s}</p>)}
-                        <button className="editbutton" onClick={() => open_edit_modal(index)}>編集</button>
-                      </>
-                      :
-                      <></>
-                    }
+                    <>
+                      <p>{d.title}</p>
+                      {d.url ? <a href={d.url} target="_blank">{d.url}</a> : <></>}
+                      {d.book_name ? <p>{d.book_name}</p> : <></>}
+                      {d.memo.split('\n').map((s) => <p>{s}</p>)}
+                      <button className="editbutton" onClick={() => open_edit_modal(index)}>編集</button>
+                    </>
                   </div>
                 </>
               )}
