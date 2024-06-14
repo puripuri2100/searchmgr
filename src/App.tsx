@@ -4,6 +4,8 @@ import { save, open } from "@tauri-apps/api/dialog";
 import { writeTextFile, readTextFile } from "@tauri-apps/api/fs";
 import { data } from "./data";
 import "./App.css";
+import { InlineMath, BlockMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 
 type InputAreaProps = {
   children: ReactElement;
@@ -182,6 +184,7 @@ function App() {
             <button className="rowbutton" type="submit" onClick={new_create_button}>New Create</button>
             <button className="rowbutton" type="submit" onClick={import_button}>Import</button>
           </div>
+          <InlineMath>\int_0^\infty x^2 dx</InlineMath>
         </div>
       }
     </>
