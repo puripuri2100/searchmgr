@@ -1,6 +1,5 @@
 import { ReactElement, useEffect, useState } from "react";
 import Modal from "react-modal";
-import { invoke } from "@tauri-apps/api/tauri";
 import { save, open } from "@tauri-apps/api/dialog";
 import { writeTextFile, readTextFile } from "@tauri-apps/api/fs";
 import { data } from "./data";
@@ -107,7 +106,7 @@ function App() {
         <>
           <Modal isOpen={createModal}>
             <InputArea title="タイトル"><input value={newData.title} onChange={(e) => {setNewData({...newData, title: e.target.value})}}/></InputArea>
-            <InputArea title="URL"><input value={newData.url} onChange={(e) => {setNewData({...newData, url: e.target.value})}}/></InputArea>
+            <InputArea title="リンク"><input value={newData.url} onChange={(e) => {setNewData({...newData, url: e.target.value})}}/></InputArea>
             <InputArea title="本"><input value={newData.book_name} onChange={(e) => {setNewData({...newData, book_name: e.target.value})}}/></InputArea>
             <InputArea title="メモ">
               <>
@@ -116,7 +115,7 @@ function App() {
               </>
             </InputArea>
             <button onClick={close_create_modal}>キャンセル</button>
-            <button disabled={newData.title.length == 0} onClick={() => {
+            <button className={newData.title.length == 0 ? "no_button" : "ok_button"} disabled={newData.title.length == 0} onClick={() => {
               if (data) {
                 setData([newData,...data]);
               } else {
@@ -129,8 +128,9 @@ function App() {
           </Modal>
 
           <Modal isOpen={editModal}>
+            <button className="delete_button" type="submit" onClick={() => deleteData(editIndex)}>削除</button>
             <InputArea title="タイトル"><input value={newData.title} onChange={(e) => {setNewData({...newData, title: e.target.value})}}/></InputArea>
-            <InputArea title="URL"><input value={newData.url} onChange={(e) => {setNewData({...newData, url: e.target.value})}}/></InputArea>
+            <InputArea title="リンク"><input value={newData.url} onChange={(e) => {setNewData({...newData, url: e.target.value})}}/></InputArea>
             <InputArea title="本"><input value={newData.book_name} onChange={(e) => {setNewData({...newData, book_name: e.target.value})}}/></InputArea>
             <InputArea title="メモ">
               <>
@@ -138,9 +138,8 @@ function App() {
                 <textarea value={newData.memo} onChange={(e) => {setNewData({...newData, memo: e.target.value})}}/>
               </>
             </InputArea>
-            <button type="submit" onClick={() => deleteData(editIndex)}>削除</button>
             <button onClick={close_edit_modal}>キャンセル</button>
-            <button disabled={newData.title.length == 0} onClick={() => {
+            <button className={newData.title.length == 0 ? "no_button" : "ok_button"} disabled={newData.title.length == 0} onClick={() => {
               setData(data.map((d, i) => i == editIndex ? newData : d));
               close_edit_modal();
             }}>
@@ -159,11 +158,17 @@ function App() {
                 {index == 0 ? <></> : <Line/>}
                   <div className="data" id={`data${index}`}>
                     <>
-                      <p>{d.title}</p>
-                      {d.url ? <a href={d.url} target="_blank">{d.url}</a> : <></>}
-                      {d.book_name ? <p>{d.book_name}</p> : <></>}
-                      {d.memo.split('\n').map((s) => <p>{s}</p>)}
-                      <button className="editbutton" onClick={() => open_edit_modal(index)}>編集</button>
+                      <div className="row_left">
+                        <p className="data_title">{d.title}</p>
+                        <button className="editbutton" onClick={() => open_edit_modal(index)}>編集</button>
+                      </div>
+                      {d.url ? <p>🔗 <a href={d.url} target="_blank">{d.url}</a></p> : <></>}
+                      {d.book_name ? <p>📕 {d.book_name}</p> : <></>}
+                      {d.memo.length == 0 ? <></> :
+                        <div className="memo">
+                          {d.memo.split('\n').map((s) => <p>{s}</p>)}
+                        </div>
+                      }
                     </>
                   </div>
                 </>
