@@ -26,6 +26,26 @@
   border-top-width: 1pt;
 }
 
+.contents {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+}
+
+.main {
+  width: 85%;
+}
+
+.side {
+  height: 100vh;
+  width: 15%;
+  overflow-y: scroll;
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+}
+
+
 .logo.vite:hover {
   filter: drop-shadow(0 0 2em #747bff);
 }

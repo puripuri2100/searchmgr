@@ -1,11 +1,23 @@
-import { useEffect, useState } from "react";
+import { ReactElement, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { save, open } from "@tauri-apps/api/dialog";
 import { writeTextFile, readTextFile } from "@tauri-apps/api/fs";
 import { data } from "./data";
 import "./App.css";
 
+type InputAreaProps = {
+  children: ReactElement;
+  title?: string;
+}
 
+function InputArea(props: InputAreaProps) {
+  return (
+    <div className="inputarea">
+      {props.title ? <p>{props.title}</p> : <></>}
+      {props.children}
+    </div>
+  )
+}
 
 function App() {
 
@@ -34,7 +46,7 @@ function App() {
   }
 
   async function new_button_click() {
-    const d = {title: "", book_name: null, url: null, time_stamp: null, memo: "", keywords: []};
+    const d = {title: "タイトル", book_name: null, url: null, time_stamp: null, memo: "", keywords: []};
     if (data) {
       setData([d,...data])
     } else {
@@ -87,7 +99,7 @@ function App() {
   }
 
   function Line(_props: {}) {
-    return <div className="line"></div>
+    return <hr></hr>
   }
 
   useEffect(() => {
@@ -104,19 +116,26 @@ function App() {
     <>
       {data ?
         <>
-          <NewButton/>
-          {data.map((d: data, index: number) =>
-            <>
-              <div className="data">
-                <input value={d.title} onChange={(e) => {changeTitle(index, e.target.value)}}/>
-                <input value={d.url ? d.url : ""} onChange={(e) => {changeUrl(index, e.target.value)}}/>
-                <input value={d.book_name ? d.book_name : ""} onChange={(e) => {changeBookName(index, e.target.value)}}/>
-                <textarea value={d.memo} onChange={(e) => {changeMemo(index, e.target.value)}}/>
-                <button type="submit" onClick={() => deleteData(index)}>削除</button>
-              </div>
-              {index == 0 ? <></> : <Line/>}
-            </>
-          )}
+          <div className="contents">
+            <div className="side">
+              {data.map((d: data, index:number) => <div><a href={`#data${index}`}>{d.title}</a></div>)}
+            </div>
+            <div className="main">
+              <NewButton/>
+              {data.map((d: data, index: number) =>
+                <>
+                {index == 0 ? <></> : <Line/>}
+                  <div className="data" id={`data${index}`}>
+                    <InputArea><input value={d.title} onChange={(e) => {changeTitle(index, e.target.value)}}/></InputArea>
+                    <InputArea title="URL"><input value={d.url ? d.url : ""} onChange={(e) => {changeUrl(index, e.target.value)}}/></InputArea>
+                    <InputArea title="本"><input value={d.book_name ? d.book_name : ""} onChange={(e) => {changeBookName(index, e.target.value)}}/></InputArea>
+                    <InputArea title="メモ"><textarea value={d.memo} onChange={(e) => {changeMemo(index, e.target.value)}}/></InputArea>
+                    <button type="submit" onClick={() => deleteData(index)}>削除</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </>
       :
         <div className="container">
