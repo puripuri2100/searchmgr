@@ -1,9 +1,11 @@
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useCallback, useEffect, useState } from "react";
 import Modal from "react-modal";
+import { invoke } from "@tauri-apps/api/tauri";
 import { save, open } from "@tauri-apps/api/dialog";
 import { writeTextFile, readTextFile } from "@tauri-apps/api/fs";
-import { data } from "./data";
+import { data, markdown_block, markdown_inline, markdown_list } from "./data";
 import "./App.css";
+import { CopyBlock, github } from 'react-code-blocks';
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 
@@ -92,9 +94,93 @@ function App() {
     return <hr></hr>
   }
 
+  function md_inline(md: markdown_inline) {
+    if (md.type == 'text') {
+      return (<>{md.string}</>)
+    } else if (md.type == "br") {
+      return (<br />)
+    } else if (md.type == "inline_code") {
+      return <code>{md.string}</code>
+    } else if (md.type == "inline_math") {
+      return (<InlineMath>{md.string}</InlineMath>)
+    } else if (md.type == "display_math") {
+      return (<BlockMath>{md.string}</BlockMath>)
+    } else if (md.type == "emphasis") {
+      return (<em>{md.text?.map(md_inline)}</em>)
+    } else if (md.type == "strong") {
+      return (<strong>{md.text?.map(md_inline)}</strong>)
+    } else if (md.type == "strike") {
+      return (<s>{md.text?.map(md_inline)}</s>)
+    } else if (md.type == "link" && md.link) {
+      return (<a href={md.link}>{md.text?.map(md_inline)}</a>)
+    } else if (md.type == "image" && md.link && md.string) {
+      return (<img width="60%" alt={md.string} src={md.link} />)
+    }
+    return <></>
+  }
+
+  function md_list(md: markdown_list): ReactElement {
+    if (md.type == "item") {
+      if (md.check == null) {
+        return <li>{md.text?.map(md_inline)}</li>
+      } else {
+        if (md.check) {
+          return <li className="check_true">{md.text?.map(md_inline)}</li>
+        } else {
+          return <li className="check_false">{md.text?.map(md_inline)}</li>
+        }
+      }
+    } else if (md.type == "ol" && md.start) {
+      return <ol start={md.start}>{md.children?.map(md_list)}</ol>
+    } else if (md.type == "ul") {
+      return <ul>{md.children?.map(md_list)}</ul>
+    }
+    return <></>
+  }
+
+  function md_block(md: markdown_block): ReactElement {
+      if (md.type == 'paragraph') {
+        return (<p>{md.text?.map(md_inline)}</p>)
+      } else if (md.type == "rule") {
+        return (<Line />)
+      } else if (md.type == "heading" && md.level && md.text) {
+        // TODO
+        return (<strong>{md.text.map(md_inline)}</strong>)
+      } else if (md.type == "block_code" && md.code) {
+        return (
+          <CopyBlock
+            text={md.code}
+            language={md.lang ? md.lang : "text"}
+            theme={github}
+            showLineNumbers={false}
+          />
+        )
+      } else if (md.type == "quote") {
+        return (<blockquote>{md.quote_children?.map(md_block)}</blockquote>)
+      } else if (md.type == "ol" && md.start) {
+        return <ol start={md.start}>{md.children?.map(md_list)}</ol>
+      } else if (md.type == "ul") {
+        return <ul>{md.children?.map(md_list)}</ul>
+      }
+      return <></>
+  }
+
+  function markdwon(blocks: markdown_block[]): ReactElement {
+    return <>{blocks.map(md_block)}</>
+  }
+
+  const [mdData, setMdData] = useState<markdown_block[][]>([]);
+
   useEffect(() => {
     (async() => {
       if (dataPath && data) {
+        setMdData(Array(data.length).fill([]));
+        const data_md_blocks = await Promise.all(data.map(async (d) => {
+          const v = await invoke<markdown_block[]>('parse_markdown', {text: d.memo});
+          return v;
+        }));
+        setMdData(data_md_blocks);
+
         const text = JSON.stringify(data);
         await writeTextFile(dataPath, text);
       }
@@ -166,11 +252,7 @@ function App() {
                       </div>
                       {d.url ? <p>🔗 <a href={d.url} target="_blank">{d.url}</a></p> : <></>}
                       {d.book_name ? <p>📕 {d.book_name}</p> : <></>}
-                      {d.memo.length == 0 ? <></> :
-                        <div className="memo">
-                          {d.memo.split('\n').map((s) => <p>{s}</p>)}
-                        </div>
-                      }
+                      {mdData.length > index ? <>{markdwon(mdData[index])}</> : <></>}
                     </>
                   </div>
                 </>
@@ -184,7 +266,6 @@ function App() {
             <button className="rowbutton" type="submit" onClick={new_create_button}>New Create</button>
             <button className="rowbutton" type="submit" onClick={import_button}>Import</button>
           </div>
-          <InlineMath>\int_0^\infty x^2 dx</InlineMath>
         </div>
       }
     </>

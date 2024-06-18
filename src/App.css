@@ -128,6 +128,36 @@ button:active {
   justify-content: left;
 }
 
+.check_true, .check_false{
+  position: relative;
+  padding-left: 25px;
+}
+
+.check_true:before {
+  content: "";
+  position: absolute;
+  top: .35em;
+  left: 6px;
+  -webkit-transform: rotate(50deg);
+  -ms-transform: rotate(50deg);
+  transform: rotate(50deg);
+  width: 3px;
+  height: 7px;
+  border-right: 2px solid black;
+  border-bottom: 2px solid black;
+}
+
+.check_true:after,.check_false:after {
+  content: "";
+  position: absolute;
+  top: .2em;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  border: 1px solid black;
+  border-radius: 2px;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
