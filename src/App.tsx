@@ -7,8 +7,11 @@ import { data, markdown_block, markdown_inline, markdown_list } from "./data";
 import "./App.css";
 import { CopyBlock, github } from 'react-code-blocks';
 import { InlineMath, BlockMath } from 'react-katex';
-import TextareaAutosize from 'react-textarea-autosize';
 import 'katex/dist/katex.min.css';
+import TextareaAutosize from 'react-textarea-autosize';
+import { Document, Page } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
 type InputAreaProps = {
   children: ReactElement;
@@ -187,6 +190,12 @@ function App() {
       }
     })()
   }, [data])
+
+
+  const pdfOptions = {
+    cMapUrl: "/cmaps/",
+    cMapPacked: true,
+  };
 
 
   return (

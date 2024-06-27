@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npm run copy-cmaps && tsc && vite build",
+    "copy-cmaps": "cp -r node_modules/pdfjs-dist/cmaps/ public/cmaps/",
     "preview": "vite preview",
     "tauri": "tauri"
   },
@@ -18,6 +19,7 @@
     "react-dom": "^18.2.0",
     "react-katex": "^3.0.1",
     "react-modal": "^3.16.1",
+    "react-pdf": "^9.0.0",
     "react-textarea-autosize": "^8.5.3"
   },
   "devDependencies": {

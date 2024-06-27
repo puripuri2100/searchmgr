@@ -2,6 +2,12 @@ export type config = {
   now_open_file_name: string | null,
 }
 
+export type image = {
+  file_type: 'pdf' | 'jpeg' | 'png'
+  file_name: string,
+  contents: number[]
+}
+
 export type data = {
   title: string;
   book_name: string;
