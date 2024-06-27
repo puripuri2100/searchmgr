@@ -172,11 +172,6 @@ h1 {
   text-align: center;
 }
 
-.textarea_dummy {
-  min-height: 60%;
-  max-height: 30%;
-}
-
 textarea {
   width: 60%;
 }

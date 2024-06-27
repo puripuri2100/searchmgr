@@ -7,6 +7,7 @@ import { data, markdown_block, markdown_inline, markdown_list } from "./data";
 import "./App.css";
 import { CopyBlock, github } from 'react-code-blocks';
 import { InlineMath, BlockMath } from 'react-katex';
+import TextareaAutosize from 'react-textarea-autosize';
 import 'katex/dist/katex.min.css';
 
 type InputAreaProps = {
@@ -198,8 +199,7 @@ function App() {
             <InputArea title="本"><input value={newData.book_name} onChange={(e) => {setNewData({...newData, book_name: e.target.value})}}/></InputArea>
             <InputArea title="メモ">
               <>
-                <div className="textarea_dummy"></div>
-                <textarea value={newData.memo} onChange={(e) => {setNewData({...newData, memo: e.target.value})}}/>
+                <TextareaAutosize minRows={2} value={newData.memo} onChange={(e) => {setNewData({...newData, memo: e.target.value})}}/>
               </>
             </InputArea>
             <button onClick={close_create_modal}>キャンセル</button>
@@ -222,8 +222,7 @@ function App() {
             <InputArea title="本"><input value={newData.book_name} onChange={(e) => {setNewData({...newData, book_name: e.target.value})}}/></InputArea>
             <InputArea title="メモ">
               <>
-                <div className="textarea_dummy"></div>
-                <textarea value={newData.memo} onChange={(e) => {setNewData({...newData, memo: e.target.value})}}/>
+                <TextareaAutosize minRows={2} value={newData.memo} onChange={(e) => {setNewData({...newData, memo: e.target.value})}}/>
               </>
             </InputArea>
             <button onClick={close_edit_modal}>キャンセル</button>

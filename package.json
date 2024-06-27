@@ -17,7 +17,8 @@
     "react-code-blocks": "^0.1.6",
     "react-dom": "^18.2.0",
     "react-katex": "^3.0.1",
-    "react-modal": "^3.16.1"
+    "react-modal": "^3.16.1",
+    "react-textarea-autosize": "^8.5.3"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1",
