@@ -218,7 +218,7 @@ function App() {
           <Modal isOpen={editModal}>
             <button className="delete_button" type="submit" onClick={() => deleteData(editIndex)}>削除</button>
             <InputArea title="タイトル"><input value={newData.title} onChange={(e) => {setNewData({...newData, title: e.target.value})}}/></InputArea>
-            <InputArea title="リンク"><input value={newData.url} onChange={(e) => {setNewData({...newData, url: e.target.value})}}/></InputArea>
+            <InputArea title="リンク"><input type="url" value={newData.url} onChange={(e) => {setNewData({...newData, url: e.target.value})}}/></InputArea>
             <InputArea title="本"><input value={newData.book_name} onChange={(e) => {setNewData({...newData, book_name: e.target.value})}}/></InputArea>
             <InputArea title="メモ">
               <>

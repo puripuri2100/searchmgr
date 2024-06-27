@@ -178,6 +178,7 @@ textarea {
 
 input {
   width: 60%;
+  overflow-wrap: anywhere;
 }
 
 input,
