@@ -55,7 +55,9 @@ pub enum MarkdonwBlock {
         lang: Option<String>,
         code: String,
     },
-    Quote{ quote_children: Vec<MarkdonwBlock>},
+    Quote {
+        quote_children: Vec<MarkdonwBlock>,
+    },
     Ol {
         start: u64,
         children: Vec<MarkdonwList>,
@@ -131,11 +133,11 @@ fn parse_inline(iter: &mut Parser<DefaultBrokenLinkCallback>, end: TagEnd) -> Ve
             Event::Start(Tag::Image { dest_url: link, .. }) => {
                 let mut string = String::new();
                 while let Some(event) = iter.next() {
-                  match event {
-                    Event::End(TagEnd::Image) => break,
-                    Event::Text(s) => string.push_str(&s),
-                    _ => ()
-                  }
+                    match event {
+                        Event::End(TagEnd::Image) => break,
+                        Event::Text(s) => string.push_str(&s),
+                        _ => (),
+                    }
                 }
                 v.push(MarkdonwInline::Image {
                     link: format!("{link}"),
@@ -199,18 +201,18 @@ fn parse_list_item(
                 });
             }
             Event::Start(Tag::Image { dest_url: link, .. }) => {
-              let mut string = String::new();
-              while let Some(event) = iter.next() {
-                match event {
-                  Event::End(TagEnd::Image) => break,
-                  Event::Text(s) => string.push_str(&s),
-                  _ => ()
+                let mut string = String::new();
+                while let Some(event) = iter.next() {
+                    match event {
+                        Event::End(TagEnd::Image) => break,
+                        Event::Text(s) => string.push_str(&s),
+                        _ => (),
+                    }
                 }
-              }
-              v.push(MarkdonwInline::Image {
-                  link: format!("{link}"),
-                  string,
-              });
+                v.push(MarkdonwInline::Image {
+                    link: format!("{link}"),
+                    string,
+                });
             }
             _ => (),
         }
@@ -268,7 +270,9 @@ fn parse_block(
             }
             Event::Start(Tag::BlockQuote(_)) => {
                 let blocks = parse_block(iter, Some(TagEnd::BlockQuote));
-                v.push(MarkdonwBlock::Quote{quote_children: blocks});
+                v.push(MarkdonwBlock::Quote {
+                    quote_children: blocks,
+                });
             }
             Event::Start(Tag::Heading { level, .. }) => {
                 let text = parse_inline(iter, TagEnd::Heading(level));

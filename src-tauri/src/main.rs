@@ -7,8 +7,7 @@ mod parse_md;
 
 #[tauri::command]
 fn parse_markdown(text: &str) -> Vec<MarkdonwBlock> {
-    let v = parse_md::parse_markdown(text);
-    v
+    parse_md::parse_markdown(text)
 }
 
 fn main() {
