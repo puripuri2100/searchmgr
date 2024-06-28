@@ -59,7 +59,7 @@ button:active {
 .memo {
   width: 100%;
   padding-left: 0.8em;
-  margin-top: 1.0em;
+  margin-top: 1em;
   border-left: 2px solid black;
 }
 
@@ -67,9 +67,8 @@ button:active {
   padding: 1em;
 }
 
-
 .line {
-  border-top-color: 'black';
+  border-top-color: "black";
   border-top-width: 1pt;
 }
 
@@ -117,7 +116,6 @@ button:active {
   text-align: center;
 }
 
-
 .row {
   display: flex;
   justify-content: center;
@@ -128,7 +126,8 @@ button:active {
   justify-content: left;
 }
 
-.check_true, .check_false{
+.check_true,
+.check_false {
   position: relative;
   padding-left: 25px;
 }
@@ -136,7 +135,7 @@ button:active {
 .check_true:before {
   content: "";
   position: absolute;
-  top: .35em;
+  top: 0.35em;
   left: 6px;
   -webkit-transform: rotate(50deg);
   -ms-transform: rotate(50deg);
@@ -147,10 +146,11 @@ button:active {
   border-bottom: 2px solid black;
 }
 
-.check_true:after,.check_false:after {
+.check_true:after,
+.check_false:after {
   content: "";
   position: absolute;
-  top: .2em;
+  top: 0.2em;
   left: 0;
   width: 15px;
   height: 15px;
@@ -212,4 +212,3 @@ input,
 button {
   outline: none;
 }
-
