@@ -2,10 +2,12 @@ export type config = {
   now_open_file_name: string | null;
 };
 
+export type base64_str = string;
+
 export type image = {
   file_type: "pdf" | "jpeg" | "png";
   file_name: string;
-  contents: number[];
+  contents: base64_str;
 };
 
 export type data = {
@@ -14,6 +16,7 @@ export type data = {
   url: string;
   keywords: string[];
   time_stamp: string;
+  images: image[];
   memo: string;
 };
 

@@ -2,14 +2,24 @@ import { ReactElement, useEffect, useState } from "react";
 import Modal from "react-modal";
 import { invoke } from "@tauri-apps/api/tauri";
 import { save, open } from "@tauri-apps/api/dialog";
-import { writeTextFile, readTextFile } from "@tauri-apps/api/fs";
-import { data, markdown_block, markdown_inline, markdown_list } from "./data";
+import {
+  writeTextFile,
+  readTextFile,
+  readBinaryFile,
+} from "@tauri-apps/api/fs";
+import {
+  data,
+  markdown_block,
+  markdown_inline,
+  markdown_list,
+  image,
+} from "./data";
 import "./App.css";
 import { CopyBlock, github } from "react-code-blocks";
 import { InlineMath, BlockMath } from "react-katex";
 import "katex/dist/katex.min.css";
 import TextareaAutosize from "react-textarea-autosize";
-import { Document, Page } from "react-pdf";
+//import { Document, Page } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
@@ -34,6 +44,7 @@ function App() {
     url: "",
     time_stamp: "",
     memo: "",
+    images: [],
     keywords: [],
   };
   const [data, setData] = useState<data[] | null>(null);
@@ -42,6 +53,13 @@ function App() {
   const [newData, setNewData] = useState<data>(default_data);
   const [editModal, setEditModal] = useState(false);
   const [editIndex, setEditIndex] = useState(0);
+  const [nowLoadingImages, setNowLoadingImages] = useState<string[]>([]);
+  const [imageModal, setImageModal] = useState(false);
+  const [openImageData, setOpenImageData] = useState<{
+    image: image;
+    image_index: number;
+    data_index: number;
+  } | null>(null);
 
   function open_create_modal() {
     setCreateModal(true);
@@ -49,6 +67,7 @@ function App() {
   function close_create_modal() {
     setNewData(default_data);
     setCreateModal(false);
+    setNowLoadingImages([]);
   }
 
   function open_edit_modal(index: number) {
@@ -61,6 +80,7 @@ function App() {
   function close_edit_modal() {
     setNewData(default_data);
     setEditModal(false);
+    setNowLoadingImages([]);
   }
 
   async function new_create_button() {
@@ -205,10 +225,150 @@ function App() {
     })();
   }, [data]);
 
-  const pdfOptions = {
-    cMapUrl: "/cmaps/",
-    cMapPacked: true,
-  };
+  async function add_appended_images_button() {
+    const path = await open({
+      multiple: true,
+      filters: [{ name: "file", extensions: ["jpg", "jpeg", "png", "pdf"] }],
+    });
+    if (path) {
+      if (Array.isArray(path)) {
+        setNowLoadingImages(path);
+        await Promise.all(
+          path.map(async (path) => {
+            const binary = await readBinaryFile(path);
+            const base64str = btoa(String.fromCharCode(...binary));
+            const file_type = path.split(".").pop();
+            const file_name = path.split("/").pop();
+            const file_name2 = file_name?.split("\\").pop();
+            if (file_name2) {
+              if (file_type == "jpg" || file_type == "jpeg") {
+                setNewData({
+                  ...newData,
+                  images: [
+                    {
+                      file_name: file_name2,
+                      file_type: "jpeg",
+                      contents: base64str,
+                    },
+                    ...newData.images,
+                  ],
+                });
+              } else if (file_type == "png") {
+                setNewData({
+                  ...newData,
+                  images: [
+                    {
+                      file_name: file_name2,
+                      file_type: "png",
+                      contents: base64str,
+                    },
+                    ...newData.images,
+                  ],
+                });
+              } else if (file_type == "pdf") {
+                setNewData({
+                  ...newData,
+                  images: [
+                    {
+                      file_name: file_name2,
+                      file_type: "pdf",
+                      contents: base64str,
+                    },
+                    ...newData.images,
+                  ],
+                });
+              }
+            }
+            setNowLoadingImages(nowLoadingImages.filter((p) => path != p));
+          }),
+        );
+        setNowLoadingImages([]);
+      } else {
+        setNowLoadingImages([path]);
+        const binary = await readBinaryFile(path);
+        const base64str = btoa(String.fromCharCode(...binary));
+        const file_type = path.split(".").pop();
+        const file_name = path.split("/").pop();
+        const file_name2 = file_name?.split("\\").pop();
+        if (file_name2) {
+          if (file_type == "jpg" || file_type == "jpeg") {
+            setNewData({
+              ...newData,
+              images: [
+                {
+                  file_name: file_name2,
+                  file_type: "jpeg",
+                  contents: base64str,
+                },
+                ...newData.images,
+              ],
+            });
+          } else if (file_type == "png") {
+            setNewData({
+              ...newData,
+              images: [
+                {
+                  file_name: file_name2,
+                  file_type: "png",
+                  contents: base64str,
+                },
+                ...newData.images,
+              ],
+            });
+          } else if (file_type == "pdf") {
+            setNewData({
+              ...newData,
+              images: [
+                {
+                  file_name: file_name2,
+                  file_type: "pdf",
+                  contents: base64str,
+                },
+                ...newData.images,
+              ],
+            });
+          }
+        }
+      }
+      setNowLoadingImages([]);
+    }
+  }
+
+  function open_images_button(data_index: number, image_number: number) {
+    setImageModal(true);
+    if (data) {
+      const image = data[data_index].images[image_number];
+      setOpenImageData({
+        image: image,
+        data_index: data_index,
+        image_index: image_number,
+      });
+    }
+  }
+
+  function close_image_modal() {
+    setImageModal(false);
+    setOpenImageData(null);
+  }
+
+  function deleteImageData(data_index: number, image_number: number) {
+    if (data) {
+      const new_images = data[data_index].images.filter(
+        (_, i_i) => i_i != image_number,
+      );
+      setData(
+        data.map((d, d_i) =>
+          d_i == data_index ? { ...d, images: new_images } : d,
+        ),
+      );
+    }
+    setImageModal(false);
+    setOpenImageData(null);
+  }
+  //const pdfOptions = {
+  //  cMapUrl: "/cmaps/",
+  //  cMapPacked: true,
+  //};
 
   return (
     <>
@@ -250,10 +410,40 @@ function App() {
                 />
               </>
             </InputArea>
+            <button
+              className="add_appended_button"
+              onClick={add_appended_images_button}
+            >
+              📁添付ファイル
+            </button>
+            {nowLoadingImages.length == 0 ? <></> : <p>ファイル読み込み中……</p>}
+            <div className="appended_images">
+              {nowLoadingImages.map((image_path) => {
+                const file_name = image_path.split("/").pop();
+                const file_name2 = file_name?.split("\\").pop();
+                return (
+                  <>
+                    <p>{file_name2}</p>
+                  </>
+                );
+              })}
+            </div>
+            <p>添付</p>
+            <ul>
+              {newData.images.map((image) => (
+                <li>{image.file_name}</li>
+              ))}
+            </ul>
             <button onClick={close_create_modal}>キャンセル</button>
             <button
-              className={newData.title.length == 0 ? "no_button" : "ok_button"}
-              disabled={newData.title.length == 0}
+              className={
+                newData.title.length == 0 || nowLoadingImages.length != 0
+                  ? "no_button"
+                  : "ok_button"
+              }
+              disabled={
+                newData.title.length == 0 || nowLoadingImages.length != 0
+              }
               onClick={() => {
                 if (data) {
                   setData([newData, ...data]);
@@ -311,10 +501,40 @@ function App() {
                 />
               </>
             </InputArea>
+            <button
+              className="add_appended_button"
+              onClick={add_appended_images_button}
+            >
+              📁添付ファイル
+            </button>
+            {nowLoadingImages.length == 0 ? <></> : <p>ファイル読み込み中……</p>}
+            <ul>
+              {nowLoadingImages.map((image_path) => {
+                const file_name = image_path.split("/").pop();
+                const file_name2 = file_name?.split("\\").pop();
+                return (
+                  <>
+                    <li>{file_name2}</li>
+                  </>
+                );
+              })}
+            </ul>
+            <p>添付</p>
+            <ul>
+              {newData.images.map((image) => (
+                <li>{image.file_name}</li>
+              ))}
+            </ul>
             <button onClick={close_edit_modal}>キャンセル</button>
             <button
-              className={newData.title.length == 0 ? "no_button" : "ok_button"}
-              disabled={newData.title.length == 0}
+              className={
+                newData.title.length == 0 || nowLoadingImages.length != 0
+                  ? "no_button"
+                  : "ok_button"
+              }
+              disabled={
+                newData.title.length == 0 || nowLoadingImages.length != 0
+              }
               onClick={() => {
                 setData(data.map((d, i) => (i == editIndex ? newData : d)));
                 close_edit_modal();
@@ -322,6 +542,29 @@ function App() {
             >
               更新
             </button>
+          </Modal>
+
+          <Modal isOpen={imageModal}>
+            {openImageData ? (
+              <>
+                <button
+                  className="delete_button"
+                  type="submit"
+                  onClick={() =>
+                    deleteImageData(
+                      openImageData.data_index,
+                      openImageData.image_index,
+                    )
+                  }
+                >
+                  削除
+                </button>
+                <p>{openImageData.image.file_name}</p>
+              </>
+            ) : (
+              <></>
+            )}
+            <button onClick={close_image_modal}>閉じる</button>
           </Modal>
 
           <div className="contents">
@@ -364,6 +607,18 @@ function App() {
                       ) : (
                         <></>
                       )}
+                      <div className="appended_images">
+                        {d.images.map((image, images_index) => (
+                          <button
+                            className="appended_image"
+                            onClick={() =>
+                              open_images_button(index, images_index)
+                            }
+                          >
+                            {image.file_name}
+                          </button>
+                        ))}
+                      </div>
                     </>
                   </div>
                 </>
