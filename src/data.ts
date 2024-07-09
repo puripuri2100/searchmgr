@@ -2,21 +2,63 @@ export type config = {
   now_open_file_name: string | null;
 };
 
-export type base64_str = string;
+export type text_file_type =
+  | "text"
+  | "rust"
+  | "tex"
+  | "json"
+  | "toml"
+  | "yaml"
+  | "c"
+  | "cpp"
+  | "ocaml"
+  | "satysfi"
+  | "any_text_file";
 
-export type image = {
-  file_type: "pdf" | "jpeg" | "png";
+export type text_file = {
+  file_type: text_file_type;
   file_name: string;
-  contents: base64_str;
+  contents: string;
 };
+
+export type binary_file_type = "png" | "jpeg" | "pdf";
+
+export type binary_file = {
+  file_type: binary_file_type;
+  file_name: string;
+  contents: number[];
+};
+
+export function is_binary_file(file_type: string): boolean {
+  if (file_type == "png" || file_type == "jpeg" || file_type == "pdf") {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 export type data = {
   title: string;
   book_name: string;
   url: string;
   keywords: string[];
-  images: image[];
+  text_files: text_file[];
+  binary_files: binary_file[];
   memo: string;
+  created_at: string;
+  last_edit: string;
+};
+
+export type data_with_id = {
+  id: string;
+  searchmgr_version: string;
+  data: data[];
+};
+
+export type open_file_data = {
+  data_index: number;
+  file_index: number;
+  file_data: binary_file | text_file;
 };
 
 export type markdown_inline = {

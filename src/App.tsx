@@ -3,17 +3,23 @@ import Modal from "react-modal";
 import { invoke } from "@tauri-apps/api/tauri";
 import { save, open } from "@tauri-apps/api/dialog";
 import {
-  writeTextFile,
   readTextFile,
   readBinaryFile,
+  writeBinaryFile,
 } from "@tauri-apps/api/fs";
-import { appDataDir } from "@tauri-apps/api/path";
+import { extname, basename } from "@tauri-apps/api/path";
 import {
   data,
   markdown_block,
   markdown_inline,
   markdown_list,
-  image,
+  text_file,
+  binary_file,
+  data_with_id,
+  text_file_type,
+  binary_file_type,
+  open_file_data,
+  is_binary_file,
 } from "./data";
 import "./App.css";
 import { CopyBlock, github } from "react-code-blocks";
@@ -39,35 +45,39 @@ function InputArea(props: InputAreaProps) {
 }
 
 function App() {
-  const default_data: data = {
-    title: "",
-    book_name: "",
-    url: "",
-    memo: "",
-    images: [],
-    keywords: [],
-  };
+  const searchmgr_version = "0.0.0";
+  function default_data() {
+    const date = new Date();
+    return {
+      title: "",
+      book_name: "",
+      url: "",
+      memo: "",
+      binary_files: [],
+      text_files: [],
+      keywords: [],
+      created_at: date.toISOString(),
+      last_edit: date.toISOString(),
+    };
+  }
+  const [dataId, setDataId] = useState<string>("");
   const [data, setData] = useState<data[] | null>(null);
   const [dataPath, setDataPath] = useState<string | null>(null);
   const [createModal, setCreateModal] = useState(false);
-  const [newData, setNewData] = useState<data>(default_data);
+  const [newData, setNewData] = useState<data>(default_data());
   const [editModal, setEditModal] = useState(false);
   const [editIndex, setEditIndex] = useState(0);
-  const [nowLoadingImages, setNowLoadingImages] = useState<string[]>([]);
-  const [imageModal, setImageModal] = useState(false);
-  const [openImageData, setOpenImageData] = useState<{
-    image: image;
-    image_index: number;
-    data_index: number;
-  } | null>(null);
+  const [nowLoadingFiles, setNowLoadingFiles] = useState<string[]>([]);
+  const [fileModal, setFileModal] = useState(false);
+  const [openFileData, setOpenFileData] = useState<open_file_data | null>(null);
 
   function open_create_modal() {
     setCreateModal(true);
   }
   function close_create_modal() {
-    setNewData(default_data);
+    setNewData(default_data());
     setCreateModal(false);
-    setNowLoadingImages([]);
+    setNowLoadingFiles([]);
   }
 
   function open_edit_modal(index: number) {
@@ -78,9 +88,9 @@ function App() {
     }
   }
   function close_edit_modal() {
-    setNewData(default_data);
+    setNewData(default_data());
     setEditModal(false);
-    setNowLoadingImages([]);
+    setNowLoadingFiles([]);
   }
 
   async function new_create_button() {
@@ -90,6 +100,7 @@ function App() {
     if (path) {
       setDataPath(path);
       setData([]);
+      setDataId(crypto.randomUUID());
     }
   }
 
@@ -99,12 +110,15 @@ function App() {
       filters: [{ name: "searchmgr file", extensions: ["smgr"] }],
     });
     if (path && !Array.isArray(path)) {
-      const tempPath = await appDataDir();
-      const msg = await invoke("print_temp", { path: tempPath });
+      const file_binary: Uint8Array = await readBinaryFile(path);
+      const file_binary_array = Array.from(file_binary);
+      const data_with_id: data_with_id = await invoke("read_project_file", {
+        binary: file_binary_array,
+      });
       setDataPath(path);
-      const text = await readTextFile(path);
-      const data_lst: data[] = JSON.parse(text);
+      const data_lst: data[] = data_with_id.data;
       setData(data_lst);
+      setDataId(data_with_id.id);
     }
   }
 
@@ -121,7 +135,7 @@ function App() {
   async function deleteData(index: number) {
     if (data) {
       setData(data.filter((_, i) => i != index));
-      setNewData(default_data);
+      setNewData(default_data());
       setEditModal(false);
     }
   }
@@ -221,151 +235,187 @@ function App() {
         );
         setMdData(data_md_blocks);
 
-        const text = JSON.stringify(data);
-        await writeTextFile(dataPath, text);
+        const data_with_id: data_with_id = {
+          id: dataId,
+          searchmgr_version,
+          data,
+        };
+        const output_contents: number[] = await invoke("write_project_file", {
+          data: data_with_id,
+        });
+        const output_binary: Uint8Array = new Uint8Array(output_contents);
+        await writeBinaryFile(dataPath, output_binary);
       }
     })();
   }, [data]);
 
   async function add_appended_images_button() {
-    const path = await open({
+    const file_path = await open({
       multiple: true,
-      filters: [{ name: "file", extensions: ["jpg", "jpeg", "png", "pdf"] }],
+      filters: [
+        {
+          name: "file",
+          extensions: [
+            "txt",
+            "rs",
+            "tex",
+            "aux",
+            "json",
+            "yaml",
+            "yml",
+            "toml",
+            "c",
+            "cpp",
+            "cxx",
+            "ml",
+            "mli",
+            "saty",
+            "satyh",
+            "satyg",
+            "jpg",
+            "jpeg",
+            "png",
+            "pdf",
+          ],
+        },
+      ],
     });
-    if (path) {
-      if (Array.isArray(path)) {
-        setNowLoadingImages(path);
-        await Promise.all(
-          path.map(async (path) => {
-            const binary = await readBinaryFile(path);
-            const base64str = btoa(String.fromCharCode(...binary));
-            const file_type = path.split(".").pop();
-            const file_name = path.split("/").pop();
-            const file_name2 = file_name?.split("\\").pop();
-            if (file_name2) {
-              if (file_type == "jpg" || file_type == "jpeg") {
-                setNewData({
-                  ...newData,
-                  images: [
-                    {
-                      file_name: file_name2,
-                      file_type: "jpeg",
-                      contents: base64str,
-                    },
-                    ...newData.images,
-                  ],
-                });
-              } else if (file_type == "png") {
-                setNewData({
-                  ...newData,
-                  images: [
-                    {
-                      file_name: file_name2,
-                      file_type: "png",
-                      contents: base64str,
-                    },
-                    ...newData.images,
-                  ],
-                });
-              } else if (file_type == "pdf") {
-                setNewData({
-                  ...newData,
-                  images: [
-                    {
-                      file_name: file_name2,
-                      file_type: "pdf",
-                      contents: base64str,
-                    },
-                    ...newData.images,
-                  ],
-                });
-              }
-            }
-            setNowLoadingImages(nowLoadingImages.filter((p) => path != p));
-          }),
-        );
-        setNowLoadingImages([]);
+    if (file_path) {
+      let file_path_lst = [];
+      if (Array.isArray(file_path)) {
+        file_path_lst = file_path;
       } else {
-        setNowLoadingImages([path]);
-        const binary = await readBinaryFile(path);
-        const base64str = btoa(String.fromCharCode(...binary));
-        const file_type = path.split(".").pop();
-        const file_name = path.split("/").pop();
-        const file_name2 = file_name?.split("\\").pop();
-        if (file_name2) {
-          if (file_type == "jpg" || file_type == "jpeg") {
+        file_path_lst = [file_path];
+      }
+      setNowLoadingFiles(file_path_lst);
+      await Promise.all(
+        file_path_lst.map(async (file_path) => {
+          const file_ext_name = await extname(file_path);
+          if (
+            file_ext_name == "png" ||
+            file_ext_name == "jpeg" ||
+            file_ext_name == "jpg" ||
+            file_ext_name == "pdf"
+          ) {
+            // binary file
+            let file_type: binary_file_type = "pdf";
+            if (file_ext_name == "png") {
+              file_type = "png";
+            } else if (file_ext_name == "jpeg" || file_ext_name == "jpg") {
+              file_type = "jpeg";
+            } else if (file_ext_name == "pdf") {
+              file_type = "pdf";
+            }
+            const file_name = await basename(file_path);
+            const contents_binary = await readBinaryFile(file_path);
+            const contents = Array.from(contents_binary);
+            const new_binary_file: binary_file = {
+              file_type,
+              file_name,
+              contents,
+            };
             setNewData({
               ...newData,
-              images: [
-                {
-                  file_name: file_name2,
-                  file_type: "jpeg",
-                  contents: base64str,
-                },
-                ...newData.images,
-              ],
+              binary_files: [new_binary_file, ...newData.binary_files],
             });
-          } else if (file_type == "png") {
+          } else {
+            // text file
+            let file_type: text_file_type = "any_text_file";
+            if (file_ext_name == "txt") {
+              file_type = "text";
+            } else if (file_ext_name == "rs") {
+              file_type = "rust";
+            } else if (file_ext_name == "tex" || file_ext_name == "aux") {
+              file_type = "tex";
+            } else if (file_ext_name == "json") {
+              file_type = "json";
+            } else if (file_ext_name == "toml") {
+              file_type = "toml";
+            } else if (file_ext_name == "yaml" || file_ext_name == "yml") {
+              file_type = "yaml";
+            } else if (file_ext_name == "c") {
+              file_type = "c";
+            } else if (file_ext_name == "cpp" || file_ext_name == "cxx") {
+              file_type = "cpp";
+            } else if (file_ext_name == "ml" || file_ext_name == "mli") {
+              file_type = "ocaml";
+            } else if (
+              file_ext_name == "saty" ||
+              file_ext_name == "satyh" ||
+              file_ext_name == "satyg"
+            ) {
+              file_type = "satysfi";
+            }
+            const file_name = await basename(file_path);
+            const contents = await readTextFile(file_path);
+            const new_text_file: text_file = {
+              file_name,
+              contents,
+              file_type,
+            };
             setNewData({
               ...newData,
-              images: [
-                {
-                  file_name: file_name2,
-                  file_type: "png",
-                  contents: base64str,
-                },
-                ...newData.images,
-              ],
-            });
-          } else if (file_type == "pdf") {
-            setNewData({
-              ...newData,
-              images: [
-                {
-                  file_name: file_name2,
-                  file_type: "pdf",
-                  contents: base64str,
-                },
-                ...newData.images,
-              ],
+              text_files: [new_text_file, ...newData.text_files],
             });
           }
-        }
-      }
-      setNowLoadingImages([]);
+          setNowLoadingFiles(nowLoadingFiles.filter((p) => file_path != p));
+        }),
+      );
+      setNowLoadingFiles([]);
     }
   }
 
-  function open_images_button(data_index: number, image_number: number) {
-    setImageModal(true);
+  function open_file_button(
+    is_binary_file: boolean,
+    data_index: number,
+    file_index: number,
+  ) {
     if (data) {
-      const image = data[data_index].images[image_number];
-      setOpenImageData({
-        image: image,
-        data_index: data_index,
-        image_index: image_number,
+      const file_data = is_binary_file
+        ? data[data_index].binary_files[file_index]
+        : data[data_index].text_files[file_index];
+      setOpenFileData({
+        data_index,
+        file_index,
+        file_data,
       });
+      setFileModal(true);
     }
   }
 
-  function close_image_modal() {
-    setImageModal(false);
-    setOpenImageData(null);
+  function close_file_modal() {
+    setFileModal(false);
+    setOpenFileData(null);
   }
 
-  function deleteImageData(data_index: number, image_number: number) {
+  function delete_file_data(
+    is_binary_file: boolean,
+    data_index: number,
+    file_index: number,
+  ) {
     if (data) {
-      const new_images = data[data_index].images.filter(
-        (_, i_i) => i_i != image_number,
-      );
-      setData(
-        data.map((d, d_i) =>
-          d_i == data_index ? { ...d, images: new_images } : d,
-        ),
-      );
+      if (is_binary_file) {
+        const new_binary_files = data[data_index].binary_files.filter(
+          (_, i_i) => i_i != file_index,
+        );
+        setData(
+          data.map((d, d_i) =>
+            d_i == data_index ? { ...d, binary_files: new_binary_files } : d,
+          ),
+        );
+      } else {
+        const new_text_files = data[data_index].text_files.filter(
+          (_, i_i) => i_i != file_index,
+        );
+        setData(
+          data.map((d, d_i) =>
+            d_i == data_index ? { ...d, text_files: new_text_files } : d,
+          ),
+        );
+      }
     }
-    setImageModal(false);
-    setOpenImageData(null);
+    setFileModal(false);
+    setOpenFileData(null);
   }
   //const pdfOptions = {
   //  cMapUrl: "/cmaps/",
@@ -418,9 +468,9 @@ function App() {
             >
               📁添付ファイル
             </button>
-            {nowLoadingImages.length == 0 ? <></> : <p>ファイル読み込み中……</p>}
+            {nowLoadingFiles.length == 0 ? <></> : <p>ファイル読み込み中……</p>}
             <div className="appended_images">
-              {nowLoadingImages.map((image_path) => {
+              {nowLoadingFiles.map((image_path) => {
                 const file_name = image_path.split("/").pop();
                 const file_name2 = file_name?.split("\\").pop();
                 return (
@@ -430,21 +480,28 @@ function App() {
                 );
               })}
             </div>
-            <p>添付</p>
+            {newData.binary_files.length + newData.text_files.length == 0 ? (
+              <></>
+            ) : (
+              <p>添付ファイル</p>
+            )}
             <ul>
-              {newData.images.map((image) => (
-                <li>{image.file_name}</li>
+              {newData.binary_files.map((binary_file) => (
+                <li>{binary_file.file_name}</li>
+              ))}
+              {newData.text_files.map((text_file) => (
+                <li>{text_file.file_name}</li>
               ))}
             </ul>
             <button onClick={close_create_modal}>キャンセル</button>
             <button
               className={
-                newData.title.length == 0 || nowLoadingImages.length != 0
+                newData.title.length == 0 || nowLoadingFiles.length != 0
                   ? "no_button"
                   : "ok_button"
               }
               disabled={
-                newData.title.length == 0 || nowLoadingImages.length != 0
+                newData.title.length == 0 || nowLoadingFiles.length != 0
               }
               onClick={() => {
                 if (data) {
@@ -509,10 +566,10 @@ function App() {
             >
               📁添付ファイル
             </button>
-            {nowLoadingImages.length == 0 ? <></> : <p>ファイル読み込み中……</p>}
+            {nowLoadingFiles.length == 0 ? <></> : <p>ファイル読み込み中……</p>}
             <ul>
-              {nowLoadingImages.map((image_path) => {
-                const file_name = image_path.split("/").pop();
+              {nowLoadingFiles.map((file_path) => {
+                const file_name = file_path.split("/").pop();
                 const file_name2 = file_name?.split("\\").pop();
                 return (
                   <>
@@ -521,23 +578,33 @@ function App() {
                 );
               })}
             </ul>
-            <p>添付</p>
+            {newData.binary_files.length + newData.text_files.length == 0 ? (
+              <></>
+            ) : (
+              <p>添付ファイル</p>
+            )}
             <ul>
-              {newData.images.map((image) => (
-                <li>{image.file_name}</li>
+              {newData.binary_files.map((binary_file) => (
+                <li>{binary_file.file_name}</li>
+              ))}
+              {newData.text_files.map((text_file) => (
+                <li>{text_file.file_name}</li>
               ))}
             </ul>
             <button onClick={close_edit_modal}>キャンセル</button>
             <button
               className={
-                newData.title.length == 0 || nowLoadingImages.length != 0
+                newData.title.length == 0 || nowLoadingFiles.length != 0
                   ? "no_button"
                   : "ok_button"
               }
               disabled={
-                newData.title.length == 0 || nowLoadingImages.length != 0
+                newData.title.length == 0 || nowLoadingFiles.length != 0
               }
               onClick={() => {
+                const date = new Date();
+                const date_str = date.toISOString();
+                setNewData({ ...newData, last_edit: date_str });
                 setData(data.map((d, i) => (i == editIndex ? newData : d)));
                 close_edit_modal();
               }}
@@ -546,27 +613,28 @@ function App() {
             </button>
           </Modal>
 
-          <Modal isOpen={imageModal}>
-            {openImageData ? (
+          <Modal isOpen={fileModal}>
+            {openFileData ? (
               <>
                 <button
                   className="delete_button"
                   type="submit"
                   onClick={() =>
-                    deleteImageData(
-                      openImageData.data_index,
-                      openImageData.image_index,
+                    delete_file_data(
+                      is_binary_file(openFileData.file_data.file_type),
+                      openFileData.data_index,
+                      openFileData.file_index,
                     )
                   }
                 >
                   削除
                 </button>
-                <p>{openImageData.image.file_name}</p>
+                <p>{openFileData.file_data.file_name}</p>
               </>
             ) : (
               <></>
             )}
-            <button onClick={close_image_modal}>閉じる</button>
+            <button onClick={close_file_modal}>閉じる</button>
           </Modal>
 
           <div className="contents">
@@ -610,14 +678,24 @@ function App() {
                         <></>
                       )}
                       <div className="appended_images">
-                        {d.images.map((image, images_index) => (
+                        {d.binary_files.map((binary_file, file_index) => (
                           <button
                             className="appended_image"
                             onClick={() =>
-                              open_images_button(index, images_index)
+                              open_file_button(true, index, file_index)
                             }
                           >
-                            {image.file_name}
+                            {binary_file.file_name}
+                          </button>
+                        ))}
+                        {d.text_files.map((text_file, file_index) => (
+                          <button
+                            className="appended_image"
+                            onClick={() =>
+                              open_file_button(false, index, file_index)
+                            }
+                          >
+                            {text_file.file_name}
                           </button>
                         ))}
                       </div>

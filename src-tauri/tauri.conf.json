@@ -17,8 +17,7 @@
         "readDir": true,
         "exists": true,
         "copyFile": true,
-        "createDir": true,
-        "scope": ["$APPDATA/*"]
+        "createDir": true
       },
       "dialog": {
         "open": true,
