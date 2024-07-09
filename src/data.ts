@@ -15,7 +15,6 @@ export type data = {
   book_name: string;
   url: string;
   keywords: string[];
-  time_stamp: string;
   images: image[];
   memo: string;
 };

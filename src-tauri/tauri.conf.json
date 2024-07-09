@@ -15,7 +15,10 @@
         "readFile": true,
         "writeFile": true,
         "readDir": true,
-        "exists": true
+        "exists": true,
+        "copyFile": true,
+        "createDir": true,
+        "scope": ["$APPDATA/*"]
       },
       "dialog": {
         "open": true,
@@ -24,6 +27,21 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "http": {
+        "all": true
+      },
+      "path": {
+        "all": true
+      },
+      "process": {
+        "all": true
+      },
+      "os": {
+        "all": true
+      },
+      "clipboard": {
+        "all": true
       }
     },
     "windows": [
