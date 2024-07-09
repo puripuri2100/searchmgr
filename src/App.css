@@ -92,7 +92,7 @@ button:active {
 }
 
 .side_contents {
-  margin: 10px
+  margin: 10px;
 }
 
 :root {
@@ -234,9 +234,17 @@ button {
   background-color: rgba(255, 255, 255, 0.473);
 }
 
-.appended_image {
+.appended_file {
   padding: 6px;
   font-size: small;
   margin: 4px;
   border-radius: 0%;
+}
+
+.appended_img {
+  max-width: 80%;
+  max-height: 80%;
+  object-fit: contain;
+  text-align: center;
+  border-color: #0f0f0f;
 }

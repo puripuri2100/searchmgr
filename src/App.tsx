@@ -26,7 +26,7 @@ import { CopyBlock, github } from "react-code-blocks";
 import { InlineMath, BlockMath } from "react-katex";
 import "katex/dist/katex.min.css";
 import TextareaAutosize from "react-textarea-autosize";
-//import { Document, Page } from "react-pdf";
+import { Document, Page } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
@@ -110,12 +110,12 @@ function App() {
       filters: [{ name: "searchmgr file", extensions: ["smgr"] }],
     });
     if (path && !Array.isArray(path)) {
+      setDataPath(path);
       const file_binary: Uint8Array = await readBinaryFile(path);
       const file_binary_array = Array.from(file_binary);
       const data_with_id: data_with_id = await invoke("read_project_file", {
         binary: file_binary_array,
       });
-      setDataPath(path);
       const data_lst: data[] = data_with_id.data;
       setData(data_lst);
       setDataId(data_with_id.id);
@@ -417,10 +417,29 @@ function App() {
     setFileModal(false);
     setOpenFileData(null);
   }
-  //const pdfOptions = {
-  //  cMapUrl: "/cmaps/",
-  //  cMapPacked: true,
-  //};
+
+  function gen_image_blob_url(arr: number[], image_type: string): string {
+    const buf = new Uint8Array(arr);
+    const blob = new Blob([buf], {
+      type: `image/${image_type}`,
+    });
+    const url = window.URL.createObjectURL(blob);
+    return url;
+  }
+
+  function gen_pdf_blob_url(arr: number[]): string {
+    const buf = new Uint8Array(arr);
+    const blob = new Blob([buf], {
+      type: "application/pdf",
+    });
+    const url = window.URL.createObjectURL(blob);
+    return url;
+  }
+
+  const pdfOptions = {
+    cMapUrl: "/cmaps/",
+    cMapPacked: true,
+  };
 
   return (
     <>
@@ -630,11 +649,45 @@ function App() {
                   削除
                 </button>
                 <p>{openFileData.file_data.file_name}</p>
+                {openFileData.file_data.file_type == "jpeg" ||
+                openFileData.file_data.file_type == "png" ? (
+                  <>
+                    <img
+                      className="appended_img"
+                      src={gen_image_blob_url(
+                        openFileData.file_data.contents,
+                        openFileData.file_data.file_type,
+                      )}
+                      width="80%"
+                    />
+                  </>
+                ) : openFileData.file_data.file_type == "pdf" ? (
+                  <>
+                    <Document
+                      file={gen_pdf_blob_url(openFileData.file_data.contents)}
+                    ></Document>
+                  </>
+                ) : !Array.isArray(openFileData.file_data.contents) ? (
+                  <CopyBlock
+                    text={openFileData.file_data.contents}
+                    language={
+                      openFileData.file_data.file_type == "any_text_file"
+                        ? "text"
+                        : openFileData.file_data.file_type
+                    }
+                    theme={github}
+                    showLineNumbers={false}
+                  />
+                ) : (
+                  <></>
+                )}
               </>
             ) : (
               <></>
             )}
-            <button onClick={close_file_modal}>閉じる</button>
+            <div>
+              <button onClick={close_file_modal}>閉じる</button>
+            </div>
           </Modal>
 
           <div className="contents">
@@ -680,7 +733,7 @@ function App() {
                       <div className="appended_images">
                         {d.binary_files.map((binary_file, file_index) => (
                           <button
-                            className="appended_image"
+                            className="appended_file"
                             onClick={() =>
                               open_file_button(true, index, file_index)
                             }
@@ -690,7 +743,7 @@ function App() {
                         ))}
                         {d.text_files.map((text_file, file_index) => (
                           <button
-                            className="appended_image"
+                            className="appended_file"
                             onClick={() =>
                               open_file_button(false, index, file_index)
                             }
@@ -704,6 +757,12 @@ function App() {
                 </>
               ))}
             </div>
+          </div>
+        </>
+      ) : dataPath ? (
+        <>
+          <div className="container">
+            <p>Now Loading . . .</p>
           </div>
         </>
       ) : (
