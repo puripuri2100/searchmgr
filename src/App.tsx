@@ -640,7 +640,7 @@ function App() {
           <div className="contents">
             <div className="side">
               {data.map((d: data, index: number) => (
-                <div>
+                <div className="side_contents">
                   <a href={`#data${index}`}>{d.title}</a>
                 </div>
               ))}
