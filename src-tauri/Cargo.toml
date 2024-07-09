@@ -18,6 +18,7 @@ serde = { version = "1.0.203", features = ["derive"] }
 bson = { version = "2.11.0", features = ["serde_with", "chrono-0_4", "uuid-1"] }
 uuid = { version = "1.9.1", features = ["serde"] }
 chrono = "0.4.38"
+semver = { version = "1.0.23", features = ["serde"] }
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

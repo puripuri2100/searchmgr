@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::io::{BufReader, Read, Write};
@@ -66,6 +67,7 @@ pub struct ParseData {
 #[serde(rename_all = "snake_case")]
 pub struct ParseDataWithId {
     id: Uuid,
+    searchmgr_version: Version,
     data: Vec<ParseData>,
 }
 
@@ -169,6 +171,7 @@ pub fn setup_binary_file(
 #[serde(rename_all = "snake_case")]
 pub struct DataWithId {
     id: Uuid,
+    searchmgr_version: Version,
     data: Vec<Data>,
 }
 
@@ -192,6 +195,7 @@ pub async fn parse_data_to_data(
     }
     Ok(DataWithId {
         id: parse_data.id,
+        searchmgr_version: parse_data.searchmgr_version,
         data: v,
     })
 }
@@ -231,6 +235,7 @@ pub fn write_bson(file_path: &str, data_with_id: DataWithId) -> Result<(), Strin
     }
     let parse_data = ParseDataWithId {
         id: data_with_id.id,
+        searchmgr_version: data_with_id.searchmgr_version,
         data: v,
     };
     let buf = bson::to_vec(&parse_data).map_err(|_| "error at generate bson data".to_string())?;

@@ -99,10 +99,8 @@ function App() {
       filters: [{ name: "searchmgr file", extensions: ["smgr"] }],
     });
     if (path && !Array.isArray(path)) {
-      //const tempPath = "hoge";
       const tempPath = await appDataDir();
       const msg = await invoke("print_temp", { path: tempPath });
-      //console.log(msg);
       setDataPath(path);
       const text = await readTextFile(path);
       const data_lst: data[] = JSON.parse(text);
