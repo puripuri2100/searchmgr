@@ -40,6 +40,7 @@ export function is_binary_file(file_type: string): boolean {
 export type data = {
   title: string;
   book_name: string;
+  book_author: string;
   url: string;
   keywords: string[];
   text_files: text_file[];

@@ -1,6 +1,11 @@
+use bson::Bson;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+mod legacy_0_0_0;
+
+pub const SEARCHMGR_VERSION: &str = "0.0.1";
 
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -46,11 +51,19 @@ pub struct BinaryFile {
 #[serde(rename_all = "snake_case")]
 pub struct Data {
     title: String,
+    #[serde(default = "String::new")]
     book_name: String,
+    #[serde(default = "String::new")]
+    book_author: String,
+    #[serde(default = "String::new")]
     url: String,
+    #[serde(default = "Vec::new")]
     keywords: Vec<String>,
+    #[serde(default = "Vec::new")]
     text_files: Vec<TextFile>,
+    #[serde(default = "Vec::new")]
     binary_files: Vec<BinaryFile>,
+    #[serde(default = "String::new")]
     memo: String,
     created_at: DateTime<Utc>,
     last_edit: DateTime<Utc>,
@@ -65,29 +78,30 @@ pub struct DataWithId {
 }
 
 pub async fn parse_bson(binary: Vec<u8>) -> Result<DataWithId, String> {
-    bson::from_slice(&binary).map_err(|_| "file error".to_string())
+    let bson_res = bson::from_slice::<Bson>(&binary).map_err(|_| "file error".to_string())?;
+    let ver = &bson_res
+        .as_document()
+        .ok_or("project file format error".to_string())?
+        .get("searchmgr_version")
+        .ok_or("project file format error".to_string())?
+        .as_str()
+        .ok_or("project file format error".to_string())?;
+    if ver == &SEARCHMGR_VERSION {
+        let res = bson::from_bson::<DataWithId>(bson_res).map_err(|_| "file error".to_string())?;
+        Ok(res)
+    } else {
+        match *ver {
+            "0.0.0" => {
+                let data_0_0_0 = bson::from_bson::<legacy_0_0_0::DataWithId>(bson_res)
+                    .map_err(|_| "file error".to_string())?;
+                Ok(legacy_0_0_0::update(data_0_0_0))
+            }
+            _ => Err(format!("unsupported version: {ver}")),
+        }
+    }
 }
 
 pub fn write_bson(data_with_id: DataWithId) -> Result<Vec<u8>, String> {
-    let mut v = Vec::new();
-    for data in data_with_id.data.iter() {
-        v.push(Data {
-            title: data.title.clone(),
-            book_name: data.book_name.clone(),
-            url: data.url.clone(),
-            keywords: data.keywords.clone(),
-            text_files: data.text_files.clone(),
-            binary_files: data.binary_files.clone(),
-            memo: data.memo.clone(),
-            created_at: data.created_at,
-            last_edit: data.last_edit,
-        })
-    }
-    let parse_data = DataWithId {
-        id: data_with_id.id,
-        searchmgr_version: data_with_id.searchmgr_version,
-        data: v,
-    };
-    let buf = bson::to_vec(&parse_data).map_err(|_| "error at generate bson data".to_string())?;
+    let buf = bson::to_vec(&data_with_id).map_err(|_| "error at generate bson data".to_string())?;
     Ok(buf)
 }

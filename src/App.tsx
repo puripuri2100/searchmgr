@@ -44,12 +44,13 @@ function InputArea(props: InputAreaProps) {
 }
 
 function App() {
-  const searchmgr_version = "0.0.0";
-  function default_data() {
+  const searchmgr_version = "0.0.1";
+  function default_data(): data {
     const date = new Date();
     return {
       title: "",
       book_name: "",
+      book_author: "",
       url: "",
       memo: "",
       binary_files: [],
