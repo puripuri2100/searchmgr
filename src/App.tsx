@@ -831,7 +831,7 @@ function App() {
       ) : dataPath ? (
         <>
           <div className="container">
-            <p>Now Loading . . .</p>
+            <p>読み込み中……</p>
           </div>
         </>
       ) : (
@@ -842,10 +842,10 @@ function App() {
               type="submit"
               onClick={new_create_button}
             >
-              New Create
+              新規作成
             </button>
             <button className="rowbutton" type="submit" onClick={import_button}>
-              Import
+              ファイル読み込み
             </button>
           </div>
         </div>
