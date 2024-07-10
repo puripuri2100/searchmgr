@@ -527,6 +527,14 @@ function App() {
                 }}
               />
             </InputArea>
+            <InputArea title="作者">
+              <input
+                value={newData.book_author}
+                onChange={(e) => {
+                  setNewData({ ...newData, book_author: e.target.value });
+                }}
+              />
+            </InputArea>
             <InputArea title="メモ">
               <>
                 <TextareaAutosize
@@ -626,6 +634,14 @@ function App() {
                 value={newData.book_name}
                 onChange={(e) => {
                   setNewData({ ...newData, book_name: e.target.value });
+                }}
+              />
+            </InputArea>
+            <InputArea title="作者">
+              <input
+                value={newData.book_author}
+                onChange={(e) => {
+                  setNewData({ ...newData, book_author: e.target.value });
                 }}
               />
             </InputArea>
