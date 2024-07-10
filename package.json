@@ -6,27 +6,27 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "copy-cmaps": "cp -r node_modules/pdfjs-dist/cmaps/ public/cmaps/",
     "preview": "vite preview",
     "tauri": "tauri",
     "fmt": "prettier --write src"
   },
   "dependencies": {
-    "@react-pdf/renderer": "^3.4.4",
+    "@react-pdf-viewer/core": "^3.12.0",
     "@tauri-apps/api": "^1",
     "@types/node": "^20.14.10",
     "@types/react-katex": "^3.0.4",
     "@types/react-modal": "^3.16.3",
+    "pdfjs-dist": "^3.4.120",
     "react": "^18.2.0",
     "react-code-blocks": "^0.1.6",
     "react-dom": "^18.2.0",
     "react-katex": "^3.0.1",
     "react-modal": "^3.16.1",
-    "react-pdf": "^9.0.0",
     "react-textarea-autosize": "^8.5.3"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1",
+    "@types/pdfjs-dist": "^2.10.378",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.2.1",

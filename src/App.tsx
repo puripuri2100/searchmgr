@@ -26,9 +26,8 @@ import { CopyBlock, github } from "react-code-blocks";
 import { InlineMath, BlockMath } from "react-katex";
 import "katex/dist/katex.min.css";
 import TextareaAutosize from "react-textarea-autosize";
-import { Document, Page } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
+import { CharacterMap, Worker, Viewer } from "@react-pdf-viewer/core";
+import "@react-pdf-viewer/core/lib/styles/index.css";
 
 type InputAreaProps = {
   children: ReactElement;
@@ -427,18 +426,9 @@ function App() {
     return url;
   }
 
-  function gen_pdf_blob_url(arr: number[]): string {
-    const buf = new Uint8Array(arr);
-    const blob = new Blob([buf], {
-      type: "application/pdf",
-    });
-    const url = window.URL.createObjectURL(blob);
-    return url;
-  }
-
-  const pdfOptions = {
-    cMapUrl: "/cmaps/",
-    cMapPacked: true,
+  const characterMap: CharacterMap = {
+    isCompressed: true,
+    url: "https://unpkg.com/pdfjs-dist@2.6.347/cmaps/",
   };
 
   return (
@@ -658,15 +648,19 @@ function App() {
                         openFileData.file_data.contents,
                         openFileData.file_data.file_type,
                       )}
-                      width="80%"
                     />
                   </>
                 ) : openFileData.file_data.file_type == "pdf" ? (
-                  <>
-                    <Document
-                      file={gen_pdf_blob_url(openFileData.file_data.contents)}
-                    ></Document>
-                  </>
+                  <div>
+                    <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+                      <Viewer
+                        fileUrl={
+                          new Uint8Array(openFileData.file_data.contents)
+                        }
+                        characterMap={characterMap}
+                      />
+                    </Worker>
+                  </div>
                 ) : !Array.isArray(openFileData.file_data.contents) ? (
                   <CopyBlock
                     text={openFileData.file_data.contents}
