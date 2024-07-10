@@ -63,10 +63,9 @@ function App() {
   const [dataId, setDataId] = useState<string>("");
   const [data, setData] = useState<data[] | null>(null);
   const [dataPath, setDataPath] = useState<string | null>(null);
-  const [createModal, setCreateModal] = useState(false);
   const [newData, setNewData] = useState<data>(default_data());
-  const [editModal, setEditModal] = useState(false);
-  const [editIndex, setEditIndex] = useState(0);
+  const [newDataModal, setNewDataModal] = useState(false);
+  const [editIndex, setEditIndex] = useState(-1);
   const [nowLoadingFiles, setNowLoadingFiles] = useState<string[]>([]);
   const [fileModal, setFileModal] = useState(false);
   const [openFileData, setOpenFileData] = useState<open_file_data | null>(null);
@@ -110,11 +109,12 @@ function App() {
     useState<DeleteDialogProps | null>(null);
 
   function open_create_modal() {
-    setCreateModal(true);
+    setNewDataModal(true);
+    setEditIndex(-1);
   }
-  function close_create_modal() {
+  function close_new_data_modal() {
     setNewData(default_data());
-    setCreateModal(false);
+    setNewDataModal(false);
     setNowLoadingFiles([]);
   }
 
@@ -122,13 +122,8 @@ function App() {
     if (data) {
       setNewData(data[index]);
       setEditIndex(index);
-      setEditModal(true);
+      setNewDataModal(true);
     }
-  }
-  function close_edit_modal() {
-    setNewData(default_data());
-    setEditModal(false);
-    setNowLoadingFiles([]);
   }
 
   async function new_create_button() {
@@ -183,7 +178,7 @@ function App() {
     if (data && delete_dialog_result == "ok") {
       setData(data.filter((_, i) => i != index));
       setNewData(default_data());
-      setEditModal(false);
+      setNewDataModal(false);
     }
   }
 
@@ -499,10 +494,21 @@ function App() {
           )}
 
           <Modal
-            onRequestClose={close_create_modal}
+            onRequestClose={close_new_data_modal}
             shouldCloseOnOverlayClick={true}
-            isOpen={createModal}
+            isOpen={newDataModal}
           >
+            {editIndex >= 0 ? (
+              <button
+                className="delete_button"
+                type="submit"
+                onClick={() => deleteData(editIndex)}
+              >
+                削除
+              </button>
+            ) : (
+              <></>
+            )}
             <InputArea title="タイトル">
               <input
                 value={newData.title}
@@ -577,7 +583,7 @@ function App() {
                 <li>{text_file.file_name}</li>
               ))}
             </ul>
-            <button onClick={close_create_modal}>キャンセル</button>
+            <button onClick={close_new_data_modal}>キャンセル</button>
             <button
               className={
                 newData.title.length == 0 || nowLoadingFiles.length != 0
@@ -588,191 +594,23 @@ function App() {
                 newData.title.length == 0 || nowLoadingFiles.length != 0
               }
               onClick={() => {
-                if (data) {
-                  setData([newData, ...data]);
+                if (editIndex >= 0) {
+                  const date = new Date();
+                  const date_str = date.toISOString();
+                  setNewData({ ...newData, last_edit: date_str });
+                  setData(data.map((d, i) => (i == editIndex ? newData : d)));
                 } else {
-                  setData([newData]);
+                  if (data) {
+                    setData([newData, ...data]);
+                  } else {
+                    setData([newData]);
+                  }
                 }
-                close_create_modal();
+                close_new_data_modal();
               }}
             >
-              作成
+              {editIndex >= 0 ? "更新" : "作成"}
             </button>
-          </Modal>
-
-          <Modal
-            onRequestClose={close_edit_modal}
-            shouldCloseOnOverlayClick={true}
-            isOpen={editModal}
-          >
-            <button
-              className="delete_button"
-              type="submit"
-              onClick={() => deleteData(editIndex)}
-            >
-              削除
-            </button>
-            <InputArea title="タイトル">
-              <input
-                value={newData.title}
-                onChange={(e) => {
-                  setNewData({ ...newData, title: e.target.value });
-                }}
-              />
-            </InputArea>
-            <InputArea title="リンク">
-              <input
-                type="url"
-                value={newData.url}
-                onChange={(e) => {
-                  setNewData({ ...newData, url: e.target.value });
-                }}
-              />
-            </InputArea>
-            <InputArea title="本">
-              <input
-                value={newData.book_name}
-                onChange={(e) => {
-                  setNewData({ ...newData, book_name: e.target.value });
-                }}
-              />
-            </InputArea>
-            <InputArea title="作者">
-              <input
-                value={newData.book_author}
-                onChange={(e) => {
-                  setNewData({ ...newData, book_author: e.target.value });
-                }}
-              />
-            </InputArea>
-            <InputArea title="メモ">
-              <>
-                <TextareaAutosize
-                  minRows={2}
-                  value={newData.memo}
-                  onChange={(e) => {
-                    setNewData({ ...newData, memo: e.target.value });
-                  }}
-                />
-              </>
-            </InputArea>
-            <button
-              className="add_appended_button"
-              onClick={add_appended_images_button}
-            >
-              📁添付ファイル
-            </button>
-            {nowLoadingFiles.length == 0 ? <></> : <p>ファイル読み込み中……</p>}
-            <ul>
-              {nowLoadingFiles.map((file_path) => {
-                const file_name = file_path.split("/").pop();
-                const file_name2 = file_name?.split("\\").pop();
-                return (
-                  <>
-                    <li>{file_name2}</li>
-                  </>
-                );
-              })}
-            </ul>
-            {newData.binary_files.length + newData.text_files.length == 0 ? (
-              <></>
-            ) : (
-              <p>添付ファイル</p>
-            )}
-            <ul>
-              {newData.binary_files.map((binary_file) => (
-                <li>{binary_file.file_name}</li>
-              ))}
-              {newData.text_files.map((text_file) => (
-                <li>{text_file.file_name}</li>
-              ))}
-            </ul>
-            <button onClick={close_edit_modal}>キャンセル</button>
-            <button
-              className={
-                newData.title.length == 0 || nowLoadingFiles.length != 0
-                  ? "no_button"
-                  : "ok_button"
-              }
-              disabled={
-                newData.title.length == 0 || nowLoadingFiles.length != 0
-              }
-              onClick={() => {
-                const date = new Date();
-                const date_str = date.toISOString();
-                setNewData({ ...newData, last_edit: date_str });
-                setData(data.map((d, i) => (i == editIndex ? newData : d)));
-                close_edit_modal();
-              }}
-            >
-              更新
-            </button>
-          </Modal>
-
-          <Modal
-            onRequestClose={close_file_modal}
-            shouldCloseOnOverlayClick={true}
-            isOpen={fileModal}
-          >
-            {openFileData ? (
-              <>
-                <button
-                  className="delete_button"
-                  type="submit"
-                  onClick={() => {
-                    delete_file_data(
-                      is_binary_file(openFileData.file_data.file_type),
-                      openFileData.data_index,
-                      openFileData.file_index,
-                    );
-                  }}
-                >
-                  削除
-                </button>
-                <p>{openFileData.file_data.file_name}</p>
-                {openFileData.file_data.file_type == "jpeg" ||
-                openFileData.file_data.file_type == "png" ? (
-                  <>
-                    <img
-                      className="appended_img"
-                      src={gen_image_blob_url(
-                        openFileData.file_data.contents,
-                        openFileData.file_data.file_type,
-                      )}
-                    />
-                  </>
-                ) : openFileData.file_data.file_type == "pdf" ? (
-                  <div>
-                    <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
-                      <Viewer
-                        fileUrl={
-                          new Uint8Array(openFileData.file_data.contents)
-                        }
-                        characterMap={characterMap}
-                      />
-                    </Worker>
-                  </div>
-                ) : !Array.isArray(openFileData.file_data.contents) ? (
-                  <CopyBlock
-                    text={openFileData.file_data.contents}
-                    language={
-                      openFileData.file_data.file_type == "any_text_file"
-                        ? "text"
-                        : openFileData.file_data.file_type
-                    }
-                    theme={github}
-                    showLineNumbers={false}
-                  />
-                ) : (
-                  <></>
-                )}
-              </>
-            ) : (
-              <></>
-            )}
-            <div>
-              <button onClick={close_file_modal}>閉じる</button>
-            </div>
           </Modal>
 
           <div className="contents">
