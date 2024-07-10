@@ -613,6 +613,72 @@ function App() {
             </button>
           </Modal>
 
+          <Modal
+            onRequestClose={close_file_modal}
+            shouldCloseOnOverlayClick={true}
+            isOpen={fileModal}
+          >
+            {openFileData ? (
+              <>
+                <button
+                  className="delete_button"
+                  type="submit"
+                  onClick={() => {
+                    delete_file_data(
+                      is_binary_file(openFileData.file_data.file_type),
+                      openFileData.data_index,
+                      openFileData.file_index,
+                    );
+                  }}
+                >
+                  削除
+                </button>
+                <p>{openFileData.file_data.file_name}</p>
+                {openFileData.file_data.file_type == "jpeg" ||
+                openFileData.file_data.file_type == "png" ? (
+                  <>
+                    <img
+                      className="appended_img"
+                      src={gen_image_blob_url(
+                        openFileData.file_data.contents,
+                        openFileData.file_data.file_type,
+                      )}
+                    />
+                  </>
+                ) : openFileData.file_data.file_type == "pdf" ? (
+                  <div>
+                    <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
+                      <Viewer
+                        fileUrl={
+                          new Uint8Array(openFileData.file_data.contents)
+                        }
+                        characterMap={characterMap}
+                      />
+                    </Worker>
+                  </div>
+                ) : !Array.isArray(openFileData.file_data.contents) ? (
+                  <CopyBlock
+                    text={openFileData.file_data.contents}
+                    language={
+                      openFileData.file_data.file_type == "any_text_file"
+                        ? "text"
+                        : openFileData.file_data.file_type
+                    }
+                    theme={github}
+                    showLineNumbers={false}
+                  />
+                ) : (
+                  <></>
+                )}
+              </>
+            ) : (
+              <></>
+            )}
+            <div>
+              <button onClick={close_file_modal}>閉じる</button>
+            </div>
+          </Modal>
+
           <div className="contents">
             <div className="side">
               {data.map((d: data, index: number) => (
