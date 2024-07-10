@@ -69,6 +69,44 @@ function App() {
   const [nowLoadingFiles, setNowLoadingFiles] = useState<string[]>([]);
   const [fileModal, setFileModal] = useState(false);
   const [openFileData, setOpenFileData] = useState<open_file_data | null>(null);
+  const [deleteModal, setDeleteModal] = useState(false);
+
+  type delete_dialog_value = "ok" | "cancel";
+  type DeleteDialogProps = {
+    onClose: (value: delete_dialog_value) => void;
+  };
+
+  function DeleteDialog(props: DeleteDialogProps) {
+    return (
+      <Modal
+        isOpen={deleteModal}
+        onRequestClose={() => {
+          props.onClose("cancel");
+          setDeleteModal(false);
+        }}
+        shouldCloseOnOverlayClick={true}
+      >
+        <div className="modal_title">本当に削除しますか？</div>
+        <div className="modal_buttons">
+          <button
+            className="ok_button"
+            onClick={() => {
+              setDeleteModal(false);
+              props.onClose("cancel");
+            }}
+          >
+            削除しない
+          </button>
+          <button className="delete_button" onClick={() => props.onClose("ok")}>
+            削除する
+          </button>
+        </div>
+      </Modal>
+    );
+  }
+
+  const [DeleteDialogConfig, setDeleteDialogConfig] =
+    useState<DeleteDialogProps | null>(null);
 
   function open_create_modal() {
     setCreateModal(true);
@@ -132,7 +170,16 @@ function App() {
   }
 
   async function deleteData(index: number) {
-    if (data) {
+    const delete_dialog_result = await new Promise<delete_dialog_value>(
+      (resolve) => {
+        setDeleteModal(true);
+        setDeleteDialogConfig({
+          onClose: resolve,
+        });
+      },
+    );
+    setDeleteDialogConfig(null);
+    if (data && delete_dialog_result == "ok") {
       setData(data.filter((_, i) => i != index));
       setNewData(default_data());
       setEditModal(false);
@@ -387,12 +434,21 @@ function App() {
     setOpenFileData(null);
   }
 
-  function delete_file_data(
+  async function delete_file_data(
     is_binary_file: boolean,
     data_index: number,
     file_index: number,
   ) {
-    if (data) {
+    const delete_dialog_result = await new Promise<delete_dialog_value>(
+      (resolve) => {
+        setDeleteModal(true);
+        setDeleteDialogConfig({
+          onClose: resolve,
+        });
+      },
+    );
+    setDeleteDialogConfig(null);
+    if (data && delete_dialog_result == "ok") {
       if (is_binary_file) {
         const new_binary_files = data[data_index].binary_files.filter(
           (_, i_i) => i_i != file_index,
@@ -435,6 +491,12 @@ function App() {
     <>
       {data ? (
         <>
+          {DeleteDialogConfig ? (
+            <DeleteDialog {...DeleteDialogConfig}></DeleteDialog>
+          ) : (
+            <></>
+          )}
+
           <Modal
             onRequestClose={close_create_modal}
             shouldCloseOnOverlayClick={true}
@@ -640,13 +702,13 @@ function App() {
                 <button
                   className="delete_button"
                   type="submit"
-                  onClick={() =>
+                  onClick={() => {
                     delete_file_data(
                       is_binary_file(openFileData.file_data.file_type),
                       openFileData.data_index,
                       openFileData.file_index,
-                    )
-                  }
+                    );
+                  }}
                 >
                   削除
                 </button>

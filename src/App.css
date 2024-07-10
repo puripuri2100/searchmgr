@@ -2,6 +2,18 @@
   font-weight: bold;
 }
 
+.modal_title {
+  font-weight: bold;
+  font-size: large;
+  text-align: center;
+}
+
+.modal_buttons {
+  text-align: center;
+  padding: 10px;
+  margin: 10px;
+}
+
 .rowbuttons {
   display: flex;
   text-align: center;
@@ -35,6 +47,7 @@
   background-color: red;
   color: white;
   border: 1px solid transparent;
+  margin: 1em;
 }
 
 .delete_button:hover {
@@ -47,13 +60,13 @@ button:active {
 .ok_button {
   background-color: white;
   color: blue;
-  margin-left: 1em;
+  margin: 1em;
 }
 
 .no_button {
   background-color: rgb(163, 163, 163);
   color: #545454;
-  margin-left: 1em;
+  margin: 1em;
 }
 
 .memo {
