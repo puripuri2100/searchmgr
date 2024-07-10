@@ -435,7 +435,11 @@ function App() {
     <>
       {data ? (
         <>
-          <Modal isOpen={createModal}>
+          <Modal
+            onRequestClose={close_create_modal}
+            shouldCloseOnOverlayClick={true}
+            isOpen={createModal}
+          >
             <InputArea title="タイトル">
               <input
                 value={newData.title}
@@ -525,7 +529,11 @@ function App() {
             </button>
           </Modal>
 
-          <Modal isOpen={editModal}>
+          <Modal
+            onRequestClose={close_edit_modal}
+            shouldCloseOnOverlayClick={true}
+            isOpen={editModal}
+          >
             <button
               className="delete_button"
               type="submit"
@@ -622,7 +630,11 @@ function App() {
             </button>
           </Modal>
 
-          <Modal isOpen={fileModal}>
+          <Modal
+            onRequestClose={close_file_modal}
+            shouldCloseOnOverlayClick={true}
+            isOpen={fileModal}
+          >
             {openFileData ? (
               <>
                 <button
