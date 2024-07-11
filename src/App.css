@@ -261,3 +261,21 @@ button {
   text-align: center;
   border-color: #0f0f0f;
 }
+
+.title_fig {
+  margin-right: 1em
+}
+
+.title {
+  margin-bottom: 1.5em;
+}
+
+.title_l {
+  font-style: bold;
+  font-size: 5em;
+}
+
+.title_m {
+  font-style: bold;
+  font-size: 2em;
+}

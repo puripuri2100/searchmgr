@@ -1,7 +1,5 @@
-# Tauri + React + Typescript
+<center>
+  <img src="src-tauri/icons/icon.png" alt="searchmgr icon" width="50"> </img><span style="font-size: 50; font-style: bold">s</span><span style="font-size: 20; font-style: bold">earch</span><span style="font-size: 50; font-style: bold">mgr</span>
+</center>
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
-
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+文献管理や検索結果の管理をするソフトウェア
