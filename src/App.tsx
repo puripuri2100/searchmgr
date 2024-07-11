@@ -757,7 +757,7 @@ function App() {
       ) : (
         <div className="container">
           <div className="title">
-          <img src="src-tauri/icons/icon.png" alt="searchmgr icon" className="title_fig" width="45"></img><span className="title_l">s</span><span className="title_m">earch</span><span className="title_l">mgr</span>
+          <img src="/icon.svg" alt="searchmgr icon" className="title_fig" width="45"></img><span className="title_l">s</span><span className="title_m">earch</span><span className="title_l">mgr</span>
           </div>
           <div className="rowbuttons">
             <button
