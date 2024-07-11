@@ -1,6 +1,6 @@
 [package]
 name = "searchmgr"
-version = "0.0.1"
+version = "0.1.0"
 description = "検索・文献管理ソフトウェア"
 authors = ["Naoki Kaneko <puripuri2100@gmail.com>"]
 edition = "2021"

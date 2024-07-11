@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 mod legacy_0_0_0;
 
-pub const SEARCHMGR_VERSION: &str = "0.0.1";
+pub const SEARCHMGR_VERSION: &str = "0.1.0";
 
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

@@ -44,7 +44,7 @@ function InputArea(props: InputAreaProps) {
 }
 
 function App() {
-  const searchmgr_version = "0.0.1";
+  const searchmgr_version = "0.1.0";
   function default_data(): data {
     const date = new Date();
     return {
