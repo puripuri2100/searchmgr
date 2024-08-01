@@ -6,6 +6,7 @@ import {
   readTextFile,
   readBinaryFile,
   writeBinaryFile,
+  writeTextFile,
 } from "@tauri-apps/api/fs";
 import { extname, basename } from "@tauri-apps/api/path";
 import {
@@ -152,6 +153,19 @@ function App() {
       const data_lst: data[] = data_with_id.data;
       setData(data_lst);
       setDataId(data_with_id.id);
+    }
+  }
+
+  async function file_download(name: string, contents: string | number[]) {
+    const path = await save({
+      defaultPath: name,
+    });
+    if (path) {
+      if (typeof contents == "string") {
+        await writeTextFile(path, contents);
+      } else {
+        await writeBinaryFile(path, contents);
+      }
     }
   }
 
@@ -675,6 +689,19 @@ function App() {
               <></>
             )}
             <div>
+              {openFileData ? (
+                <button
+                  onClick={() =>
+                    file_download(
+                      openFileData.file_data.file_name,
+                      openFileData.file_data.contents,
+                    )
+                  }
+                  className="download_file_button"
+                >
+                  ダウンロード
+                </button>
+              ) : null}
               <button onClick={close_file_modal}>閉じる</button>
             </div>
           </Modal>
@@ -757,7 +784,15 @@ function App() {
       ) : (
         <div className="container">
           <div className="title">
-          <img src="/icon.svg" alt="searchmgr icon" className="title_fig" width="45"></img><span className="title_l">s</span><span className="title_m">earch</span><span className="title_l">mgr</span>
+            <img
+              src="/icon.svg"
+              alt="searchmgr icon"
+              className="title_fig"
+              width="45"
+            ></img>
+            <span className="title_l">s</span>
+            <span className="title_m">earch</span>
+            <span className="title_l">mgr</span>
           </div>
           <div className="rowbuttons">
             <button

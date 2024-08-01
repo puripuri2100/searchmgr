@@ -263,7 +263,7 @@ button {
 }
 
 .title_fig {
-  margin-right: 1em
+  margin-right: 1em;
 }
 
 .title {
@@ -278,4 +278,18 @@ button {
 .title_m {
   font-style: bold;
   font-size: 2em;
+}
+
+.download_file_button {
+  background-color: rgba(255, 255, 255, 0.473);
+  color: black;
+  margin-right: 1em;
+}
+
+.download_file_button:hover {
+  border-color: rgba(255, 255, 255, 0.473);
+}
+.download_file_button:active {
+  border-color: gray;
+  background-color: rgba(255, 255, 255, 0.473);
 }
